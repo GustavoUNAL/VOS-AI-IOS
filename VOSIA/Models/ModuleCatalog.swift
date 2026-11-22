@@ -48,7 +48,7 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .tasks: return "Tareas"
         case .projects: return "Proyectos"
         case .booking: return "Agenda"
-        case .analytics: return "Finanzas negocio"
+        case .analytics: return "Finanzas"
         case .account: return "Cuenta"
         }
     }
@@ -62,6 +62,12 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .time: return "Pendientes del día"
         case .calendarPersonal: return "Agenda + iPhone"
         case .wellness: return "Ánimo, salud y vínculos"
+        case .projects: return "Obras y servicios"
+        case .tasks: return "Pendientes del equipo"
+        case .operations: return "Pulso del día"
+        case .analytics: return "Cobros y números"
+        case .booking: return "Citas y visitas"
+        case .staff: return "Equipo"
         default: return ""
         }
     }
@@ -95,22 +101,39 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
 
     var isNativeReady: Bool {
         switch self {
-        case .vicente, .journal, .ideas, .financePersonal, .time, .calendarPersonal, .wellness, .operations, .account, .tasks:
+        case .vicente, .journal, .ideas, .financePersonal, .time, .calendarPersonal,
+             .wellness, .operations, .account, .tasks, .projects, .analytics:
             return true
         default:
             return false
         }
     }
 
-    static func isPersonalCompany(_ user: AuthUser?) -> Bool {
-        let businessType = user?.companies
+    static func activeBusinessType(_ user: AuthUser?) -> String? {
+        user?.companies
             .first(where: { $0.id == user?.companyId })?
             .businessType?
             .lowercased()
+    }
+
+    static func isPersonalCompany(_ user: AuthUser?) -> Bool {
+        let businessType = activeBusinessType(user)
         return businessType == "personal"
             || user?.companyId == "seed-main"
             || (user?.companySlug.lowercased() == "main")
             || (user?.companyName.lowercased() == "main")
+    }
+
+    /// El electricista y negocios de servicios/energía.
+    static func isServiceCompany(_ user: AuthUser?) -> Bool {
+        let businessType = activeBusinessType(user)
+        let slug = user?.companySlug.lowercased() ?? ""
+        let name = user?.companyName.lowercased() ?? ""
+        return businessType == "services"
+            || businessType == "energy"
+            || user?.companyId == "seed-el-electricista"
+            || slug.contains("electricista")
+            || name.contains("electricista")
     }
 
     static func launcher(for user: AuthUser?) -> [AppModule] {
@@ -128,6 +151,9 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         }
 
         let permissions = Set(user?.permissions ?? [])
+        let companyModules = Set(
+            user?.companies.first(where: { $0.id == user?.companyId })?.modules ?? []
+        )
         let isAdmin = user?.isPlatformAdmin == true || permissions.contains("platform.admin")
         func can(_ needles: String...) -> Bool {
             if isAdmin { return true }
@@ -135,8 +161,23 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
                 permissions.contains { $0 == needle || $0.hasPrefix(needle) }
             }
         }
+        func hasModule(_ slug: String) -> Bool {
+            companyModules.isEmpty || companyModules.contains(slug) || isAdmin
+        }
 
-        var apps: [AppModule] = [.vicente, .journal, .operations]
+        if isServiceCompany(user) {
+            var apps: [AppModule] = []
+            if hasModule("projects"), can("projects.", "projects.view") { apps.append(.projects) }
+            if hasModule("tasks"), can("tasks.", "tasks.view") { apps.append(.tasks) }
+            apps.append(.operations)
+            if hasModule("finance"), can("finance.", "finance.view") { apps.append(.analytics) }
+            if hasModule("booking"), can("booking.", "booking.view") { apps.append(.booking) }
+            if hasModule("staff"), can("staff.", "staff.view") { apps.append(.staff) }
+            apps.append(contentsOf: [.journal, .account])
+            return apps
+        }
+
+        var apps: [AppModule] = [.journal, .operations]
         if can("products.", "products.view") { apps.append(.products) }
         if can("inventory.", "inventory.view") { apps.append(contentsOf: [.recipes, .inventory]) }
         if can("sales.", "sales.view") { apps.append(contentsOf: [.sales, .pos, .shop, .cashClose]) }

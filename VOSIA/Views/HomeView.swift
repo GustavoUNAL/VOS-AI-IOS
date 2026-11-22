@@ -4,8 +4,10 @@ struct HomeView: View {
     @Environment(SessionStore.self) private var session
     @State private var path: [AppModule] = []
     @State private var overview: PersonalOverview?
+    @State private var projectSummary: ServiceProjectsSummary?
 
     private var isPersonal: Bool { AppModule.isPersonalCompany(session.user) }
+    private var isService: Bool { AppModule.isServiceCompany(session.user) }
     private var modules: [AppModule] { AppModule.launcher(for: session.user) }
 
     var body: some View {
@@ -15,6 +17,9 @@ struct HomeView: View {
                     header
                     if isPersonal, let overview {
                         personalPulse(overview)
+                    }
+                    if isService, let projectSummary {
+                        servicePulse(projectSummary)
                     }
                     LazyVGrid(
                         columns: [GridItem(.flexible()), GridItem(.flexible())],
@@ -30,56 +35,45 @@ struct HomeView: View {
                 }
                 .padding()
             }
-            .background(
-                LinearGradient(
-                    colors: [
-                        Color(.systemGroupedBackground),
-                        Color.accentColor.opacity(0.06),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .navigationTitle(isPersonal ? "Main" : "Inicio")
+            .background(AppTheme.canvas.ignoresSafeArea())
+            .navigationTitle(isPersonal ? "Main" : (isService ? "El electricista" : "Inicio"))
             .navigationDestination(for: AppModule.self) { module in
                 ModuleDestinationView(module: module)
             }
-            .task {
-                if isPersonal {
-                    overview = try? await session.personal.overview()
-                }
-            }
-            .refreshable {
-                if isPersonal {
-                    overview = try? await session.personal.overview()
-                }
-            }
+            .task { await refreshPulse() }
+            .refreshable { await refreshPulse() }
         }
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(isPersonal ? "Vida personal" : AppConfig.brandName)
+            Text(isPersonal ? "Vida personal" : (isService ? "Empresa de servicios" : AppConfig.brandName))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Text(greeting)
                 .font(.title2.bold())
-            Text(isPersonal
-                 ? "Organizate con Vicente: dinero, notas, ideas, tiempo y bienestar en un solo lugar."
-                 : (session.user?.companyName.isEmpty == false
-                    ? "Empresa: \(session.user!.companyName)"
-                    : "Seleccione un módulo para trabajar."))
+            Text(headerCopy)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    private var headerCopy: String {
+        if isPersonal {
+            return "Organizate con Vicente: dinero, notas, ideas, tiempo y bienestar en un solo lugar."
+        }
+        if isService {
+            return "Proyectos, tareas, cobros y operación para llevar la empresa con claridad."
+        }
+        if session.user?.companyName.isEmpty == false {
+            return "Empresa: \(session.user!.companyName)"
+        }
+        return "Seleccione un módulo para trabajar."
+    }
+
     private var greeting: String {
         let name = session.user?.firstName ?? ""
-        if isPersonal {
-            return name.isEmpty ? "Buenas" : "Hola, \(name)"
-        }
         return name.isEmpty ? "Buenas" : "Hola, \(name)"
     }
 
@@ -103,6 +97,21 @@ struct HomeView: View {
         }
     }
 
+    private func servicePulse(_ summary: ServiceProjectsSummary) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Pulso de la empresa")
+                .font(.headline)
+            HStack {
+                pulseCard("Obras", value: "\(summary.total)")
+                pulseCard("En curso", value: "\(summary.inProgress)")
+            }
+            HStack {
+                pulseCard("Cobrados", value: "\(summary.completed)")
+                pulseCard("Cobrado", value: money(summary.chargedTotal))
+            }
+        }
+    }
+
     private func pulseCard(_ title: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.caption).foregroundStyle(.secondary)
@@ -110,8 +119,7 @@ struct HomeView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(AppTheme.cardBackground())
     }
 
     private func money(_ value: Double) -> String {
@@ -126,7 +134,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 10) {
             Image(systemName: module.systemImage)
                 .font(.title2)
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(AppTheme.accentMuted)
             Text(module.title)
                 .font(.headline)
                 .foregroundStyle(.primary)
@@ -136,11 +144,24 @@ struct HomeView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.leading)
             }
+            if !module.isNativeReady {
+                Text("Web")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
         }
         .padding(14)
         .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(AppTheme.cardBackground())
+    }
+
+    private func refreshPulse() async {
+        if isPersonal {
+            overview = try? await session.personal.overview()
+        }
+        if isService {
+            projectSummary = try? await session.projects.list().summary
+        }
     }
 }
 
@@ -165,6 +186,10 @@ struct ModuleDestinationView: View {
             PersonalCalendarView()
         case .wellness:
             WellnessGraphView()
+        case .projects:
+            ProjectsView()
+        case .analytics:
+            BusinessFinanceView()
         case .account:
             AccountView()
         default:

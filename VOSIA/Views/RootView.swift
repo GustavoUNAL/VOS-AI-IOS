@@ -17,6 +17,7 @@ struct RootView: View {
                 MainTabView()
             }
         }
+        .tint(AppTheme.accentMuted)
         .task {
             await session.bootstrap()
         }
@@ -27,43 +28,45 @@ struct MainTabView: View {
     @Environment(SessionStore.self) private var session
 
     private var isPersonal: Bool { AppModule.isPersonalCompany(session.user) }
+    private var isService: Bool { AppModule.isServiceCompany(session.user) }
 
     var body: some View {
         TabView {
             HomeView()
-                .tabItem { Label(isPersonal ? "Main" : "Inicio", systemImage: "square.grid.2x2") }
-
-            NavigationStack {
-                if isPersonal {
-                    VicenteChatView()
-                } else {
-                    AssistantChatView()
+                .tabItem {
+                    Label(
+                        isPersonal ? "Main" : (isService ? "Empresa" : "Inicio"),
+                        systemImage: "square.grid.2x2"
+                    )
                 }
-            }
-            .tabItem {
-                Label(isPersonal ? "Vicente" : "Asistente",
-                      systemImage: isPersonal ? "sparkles" : "bubble.left.and.bubble.right")
-            }
 
-            NavigationStack {
-                if isPersonal {
-                    JournalView()
-                } else {
-                    JournalView()
-                }
-            }
-            .tabItem { Label(isPersonal ? "Notas" : "Diario", systemImage: "book.pages") }
+            if isPersonal {
+                NavigationStack { VicenteChatView() }
+                    .tabItem { Label("Vicente", systemImage: "sparkles") }
 
-            NavigationStack {
-                if isPersonal {
-                    PersonalFinanceView()
-                } else {
-                    OperationsView()
-                }
-            }
-            .tabItem {
-                Label(isPersonal ? "Finanzas" : "Operación",
-                      systemImage: isPersonal ? "banknote" : "chart.bar")
+                NavigationStack { JournalView() }
+                    .tabItem { Label("Notas", systemImage: "book.pages") }
+
+                NavigationStack { PersonalFinanceView() }
+                    .tabItem { Label("Finanzas", systemImage: "banknote") }
+            } else if isService {
+                NavigationStack { ProjectsView() }
+                    .tabItem { Label("Proyectos", systemImage: "folder") }
+
+                NavigationStack { PersonalTasksView() }
+                    .tabItem { Label("Tareas", systemImage: "checklist") }
+
+                NavigationStack { BusinessFinanceView() }
+                    .tabItem { Label("Finanzas", systemImage: "chart.xyaxis.line") }
+            } else {
+                NavigationStack { AssistantChatView() }
+                    .tabItem { Label("Asistente", systemImage: "bubble.left.and.bubble.right") }
+
+                NavigationStack { JournalView() }
+                    .tabItem { Label("Diario", systemImage: "book.pages") }
+
+                NavigationStack { OperationsView() }
+                    .tabItem { Label("Operación", systemImage: "chart.bar") }
             }
 
             NavigationStack {
@@ -75,10 +78,12 @@ struct MainTabView: View {
             if let name = session.user?.companyName, !name.isEmpty {
                 Text(name)
                     .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(.ultraThinMaterial)
                     .clipShape(Capsule())
+                    .overlay(Capsule().stroke(AppTheme.hairline, lineWidth: 0.5))
                     .padding(.top, 4)
                     .allowsHitTesting(false)
             }

@@ -8,10 +8,14 @@ struct PersonalTasksView: View {
     @State private var errorMessage: String?
     @State private var isLoading = false
 
+    private var isPersonal: Bool { AppModule.isPersonalCompany(session.user) }
+
     var body: some View {
         List {
             Section {
-                Text("Gestión del tiempo del día. Las tareas viven en Neon (`company_tasks`) y sobreviven a los deploys.")
+                Text(isPersonal
+                     ? "Gestión del tiempo del día. Las tareas viven en Neon y sobreviven a los deploys."
+                     : "Pendientes del equipo y de la obra. Las tareas quedan guardadas por empresa.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -70,7 +74,7 @@ struct PersonalTasksView: View {
                 }
             }
         }
-        .navigationTitle("Tiempo")
+        .navigationTitle(isPersonal ? "Tiempo" : "Tareas")
         .task { await load() }
         .refreshable { await load() }
     }

@@ -81,8 +81,16 @@ struct VicenteChatView: View {
                 MarkdownText(text: message.text)
             }
             .padding(12)
-            .background(message.role == .assistant ? Color(.secondarySystemBackground) : Color.accentColor.opacity(0.15))
+            .background(
+                message.role == .assistant
+                    ? AppTheme.card
+                    : AppTheme.accentSoftFill
+            )
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(AppTheme.hairline, lineWidth: 0.5)
+            )
             if message.role == .assistant { Spacer(minLength: 40) }
         }
     }

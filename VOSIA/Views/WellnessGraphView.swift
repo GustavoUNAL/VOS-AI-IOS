@@ -155,14 +155,15 @@ struct WellnessCanvas: View {
                             path.move(to: a)
                             path.addLine(to: b)
                         }
-                        .stroke(Color.accentColor.opacity(0.25 + abs(edge.weight) * 0.5), lineWidth: 1 + CGFloat(abs(edge.weight)) * 3)
+                        .stroke(AppTheme.accentMuted.opacity(0.2 + abs(edge.weight) * 0.35), lineWidth: 1 + CGFloat(abs(edge.weight)) * 2.5)
                     }
                 }
                 ForEach(graph.nodes) { node in
                     if let point = positions[node.id] {
                         VStack(spacing: 2) {
                             Circle()
-                                .fill(Color.accentColor.opacity(0.15 + Double(node.value) / 20))
+                                .fill(AppTheme.accentMuted.opacity(0.12 + Double(node.value) / 25))
+                                .overlay(Circle().stroke(AppTheme.hairline, lineWidth: 0.5))
                                 .frame(width: 18 + CGFloat(node.value), height: 18 + CGFloat(node.value))
                             Text(node.label)
                                 .font(.caption2.weight(.semibold))
