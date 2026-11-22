@@ -20,9 +20,9 @@ struct LoginView: View {
                 .listRowBackground(Color.clear)
 
                 Section("Cuenta") {
-                    TextField("Correo", text: $email)
+                    TextField("Usuario o correo", text: $email)
                         .textContentType(.username)
-                        .keyboardType(.emailAddress)
+                        .keyboardType(.ASCIICapable)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     SecureField("Contraseña", text: $password)
