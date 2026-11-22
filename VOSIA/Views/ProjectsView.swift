@@ -19,9 +19,7 @@ struct ProjectsView: View {
     var body: some View {
         List {
             Section {
-                Text("Obras y servicios: historial, estado y cobro. Es el núcleo operativo de El electricista.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                ScreenIntro(text: "Obras y servicios: historial, estado y cobro. Núcleo operativo de la empresa.")
             }
 
             if let summary {
@@ -29,7 +27,7 @@ struct ProjectsView: View {
                     LabeledContent("Proyectos", value: "\(summary.total)")
                     LabeledContent("En ejecución", value: "\(summary.inProgress)")
                     LabeledContent("Cobrados", value: "\(summary.completed)")
-                    LabeledContent("Total cobrado", value: money(summary.chargedTotal))
+                    LabeledContent("Total cobrado", value: AppTheme.money(summary.chargedTotal))
                 }
             }
 
@@ -47,15 +45,14 @@ struct ProjectsView: View {
             }
 
             if let errorMessage {
-                Section { Text(errorMessage).foregroundStyle(.red) }
+                Section { ScreenErrorText(message: errorMessage) }
             }
 
             Section("Historial") {
                 if isLoading && projects.isEmpty {
                     ProgressView()
                 } else if projects.isEmpty {
-                    Text("Todavía no hay proyectos.")
-                        .foregroundStyle(.secondary)
+                    ScreenEmptyText(message: "Todavía no hay proyectos.")
                 } else {
                     ForEach(projects) { project in
                         Button {
@@ -72,7 +69,7 @@ struct ProjectsView: View {
                                 Text(project.address)
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
-                                Text(money(project.chargedAmount))
+                                Text(AppTheme.money(project.chargedAmount))
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(.primary)
                                 if let notes = project.notes, !notes.isEmpty {
@@ -90,6 +87,7 @@ struct ProjectsView: View {
                 }
             }
         }
+        .screenListChrome()
         .navigationTitle("Proyectos")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -117,9 +115,10 @@ struct ProjectsView: View {
                         TextField("Notas", text: $formNotes, axis: .vertical)
                     }
                     if let errorMessage {
-                        Section { Text(errorMessage).foregroundStyle(.red) }
+                        Section { ScreenErrorText(message: errorMessage) }
                     }
                 }
+                .tint(AppTheme.accentMuted)
                 .navigationTitle(editing == nil ? "Nuevo proyecto" : "Editar proyecto")
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -135,14 +134,6 @@ struct ProjectsView: View {
         }
         .task { await load() }
         .refreshable { await load() }
-    }
-
-    private func money(_ value: Double) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.currencyCode = "COP"
-        f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: value)) ?? "\(Int(value))"
     }
 
     private func startCreate() {

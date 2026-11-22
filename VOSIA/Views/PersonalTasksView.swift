@@ -13,11 +13,9 @@ struct PersonalTasksView: View {
     var body: some View {
         List {
             Section {
-                Text(isPersonal
-                     ? "Gestión del tiempo del día. Las tareas viven en Neon y sobreviven a los deploys."
-                     : "Pendientes del equipo y de la obra. Las tareas quedan guardadas por empresa.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                ScreenIntro(text: isPersonal
+                    ? "Pendientes del día. Aura también puede crearlos con “tarea: …”."
+                    : "Pendientes del equipo y de la obra.")
             }
 
             Section("Día") {
@@ -36,15 +34,14 @@ struct PersonalTasksView: View {
             }
 
             if let errorMessage {
-                Section { Text(errorMessage).foregroundStyle(.red) }
+                Section { ScreenErrorText(message: errorMessage) }
             }
 
             Section("Pendientes") {
                 if isLoading && tasks.isEmpty {
                     ProgressView()
                 } else if tasks.isEmpty {
-                    Text("Sin tareas para este día.")
-                        .foregroundStyle(.secondary)
+                    ScreenEmptyText(message: "Sin tareas para este día.")
                 } else {
                     ForEach(tasks) { task in
                         HStack(alignment: .top) {
@@ -52,7 +49,7 @@ struct PersonalTasksView: View {
                                 Task { await toggle(task) }
                             } label: {
                                 Image(systemName: task.completed ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(task.completed ? Color.accentColor : Color.secondary)
+                                    .foregroundStyle(task.completed ? AppTheme.accentMuted : Color.secondary)
                             }
                             .buttonStyle(.plain)
                             VStack(alignment: .leading, spacing: 2) {
@@ -74,6 +71,7 @@ struct PersonalTasksView: View {
                 }
             }
         }
+        .screenListChrome()
         .navigationTitle(isPersonal ? "Tiempo" : "Tareas")
         .task { await load() }
         .refreshable { await load() }

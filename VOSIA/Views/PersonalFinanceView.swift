@@ -20,16 +20,14 @@ struct PersonalFinanceView: View {
     var body: some View {
         List {
             Section {
-                Text("Finanzas personales completas: movimientos, categorías y presupuestos. Persistente en Neon.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                ScreenIntro(text: "Movimientos, categorías y presupuestos. También podés pedirle a Aura que registre un gasto.")
             }
 
             if let summary = list?.summary {
                 Section("Resumen") {
-                    LabeledContent("Ingresos", value: money(summary.incomeCOP))
-                    LabeledContent("Gastos", value: money(summary.expenseCOP))
-                    LabeledContent("Balance", value: money(summary.balanceCOP))
+                    LabeledContent("Ingresos", value: AppTheme.money(summary.incomeCOP))
+                    LabeledContent("Gastos", value: AppTheme.money(summary.expenseCOP))
+                    LabeledContent("Balance", value: AppTheme.money(summary.balanceCOP))
                 }
             }
 
@@ -38,7 +36,7 @@ struct PersonalFinanceView: View {
                     ForEach(byCategory, id: \.category) { row in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(row.category).font(.subheadline.weight(.semibold))
-                            Text("In \(money(row.incomeCOP)) · Out \(money(row.expenseCOP))")
+                            Text("In \(AppTheme.money(row.incomeCOP)) · Out \(AppTheme.money(row.expenseCOP))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -55,9 +53,9 @@ struct PersonalFinanceView: View {
                     ForEach(budgets.budgets) { budget in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(budget.category).font(.subheadline.weight(.semibold))
-                            Text("Gastado \(money(budget.spentCOP ?? 0)) / \(money(budget.limitCOP)) · Queda \(money(budget.remainingCOP ?? 0))")
+                            Text("Gastado \(AppTheme.money(budget.spentCOP ?? 0)) / \(AppTheme.money(budget.limitCOP)) · Queda \(AppTheme.money(budget.remainingCOP ?? 0))")
                                 .font(.caption)
-                                .foregroundStyle((budget.remainingCOP ?? 0) < 0 ? .red : .secondary)
+                                .foregroundStyle((budget.remainingCOP ?? 0) < 0 ? AppTheme.danger : Color.secondary)
                         }
                     }
                 }
@@ -77,7 +75,7 @@ struct PersonalFinanceView: View {
             }
 
             if let errorMessage {
-                Section { Text(errorMessage).foregroundStyle(.red) }
+                Section { ScreenErrorText(message: errorMessage) }
             }
 
             Section("Movimientos") {
@@ -89,8 +87,8 @@ struct PersonalFinanceView: View {
                             HStack {
                                 Text(entry.kind.label).font(.subheadline.weight(.semibold))
                                 Spacer()
-                                Text(money(entry.amountCOP))
-                                    .foregroundStyle(entry.kind == .INCOME ? .green : .primary)
+                                Text(AppTheme.money(entry.amountCOP))
+                                    .foregroundStyle(entry.kind == .INCOME ? AppTheme.positive : Color.primary)
                             }
                             Text("\(entry.category) · \(entry.occurredOn)")
                                 .font(.caption)
@@ -106,21 +104,14 @@ struct PersonalFinanceView: View {
                         }
                     }
                 } else {
-                    Text("Todavía no hay movimientos.").foregroundStyle(.secondary)
+                    ScreenEmptyText(message: "Todavía no hay movimientos.")
                 }
             }
         }
+        .screenListChrome()
         .navigationTitle("Finanzas")
         .task { await load() }
         .refreshable { await load() }
-    }
-
-    private func money(_ value: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "COP"
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: value)) ?? "\(Int(value))"
     }
 
     private func load() async {

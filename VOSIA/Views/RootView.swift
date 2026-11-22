@@ -74,6 +74,7 @@ struct MainTabView: View {
             }
             .tabItem { Label("Cuenta", systemImage: "person.crop.circle") }
         }
+        .tint(AppTheme.accentMuted)
         .overlay(alignment: .top) {
             if let name = session.user?.companyName, !name.isEmpty {
                 Text(name)

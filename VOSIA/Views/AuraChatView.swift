@@ -13,7 +13,13 @@ struct AuraChatView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 12) {
                         ForEach(messages) { message in
-                            bubble(message).id(message.id)
+                            ChatBubble(
+                                isUser: message.role == .user,
+                                authorLabel: message.role == .assistant ? "Aura" : "Vos",
+                                text: message.text,
+                                useMarkdown: message.role == .assistant
+                            )
+                            .id(message.id)
                         }
                         if isSending {
                             HStack(spacing: 8) {
@@ -28,6 +34,7 @@ struct AuraChatView: View {
                     }
                     .padding()
                 }
+                .background(AppTheme.canvas)
                 .onChange(of: messages.count) { _, _ in
                     withAnimation {
                         if isSending {
@@ -40,10 +47,9 @@ struct AuraChatView: View {
             }
 
             if let errorMessage {
-                Text(errorMessage)
-                    .font(.caption)
-                    .foregroundStyle(.red)
+                ScreenErrorText(message: errorMessage)
                     .padding(.horizontal)
+                    .padding(.vertical, 6)
             }
 
             HStack(alignment: .bottom, spacing: 8) {
@@ -55,12 +61,16 @@ struct AuraChatView: View {
                 } label: {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.title)
+                        .foregroundStyle(AppTheme.accentMuted)
                 }
                 .disabled(isSending || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .padding()
+            .background(.bar)
         }
+        .tint(AppTheme.accentMuted)
         .navigationTitle("Aura")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Limpiar") {
@@ -69,30 +79,6 @@ struct AuraChatView: View {
             }
         }
         .task { await bootstrap() }
-    }
-
-    private func bubble(_ message: ChatMessage) -> some View {
-        HStack {
-            if message.role == .user { Spacer(minLength: 40) }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(message.role == .assistant ? "Aura" : "Vos")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                MarkdownText(text: message.text)
-            }
-            .padding(12)
-            .background(
-                message.role == .assistant
-                    ? AppTheme.card
-                    : AppTheme.accentSoftFill
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(AppTheme.hairline, lineWidth: 0.5)
-            )
-            if message.role == .assistant { Spacer(minLength: 40) }
-        }
     }
 
     private func bootstrap() async {
@@ -141,6 +127,3 @@ struct AuraChatView: View {
         }
     }
 }
-
-/// Compat: pantallas viejas que aún referencien Vicente.
-typealias VicenteChatView = AuraChatView

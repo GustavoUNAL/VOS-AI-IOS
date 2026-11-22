@@ -36,7 +36,14 @@ struct HomeView: View {
                 .padding()
             }
             .background(AppTheme.canvas.ignoresSafeArea())
-            .navigationTitle(isPersonal ? "Main" : (isService ? "El electricista" : "Inicio"))
+            .tint(AppTheme.accentMuted)
+            .navigationTitle(
+                isPersonal
+                    ? "Main"
+                    : (session.user?.companyName.isEmpty == false
+                        ? session.user!.companyName
+                        : "Inicio")
+            )
             .navigationDestination(for: AppModule.self) { module in
                 ModuleDestinationView(module: module)
             }
@@ -122,13 +129,7 @@ struct HomeView: View {
         .background(AppTheme.cardBackground())
     }
 
-    private func money(_ value: Double) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.currencyCode = "COP"
-        f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: value)) ?? "\(Int(value))"
-    }
+    private func money(_ value: Double) -> String { AppTheme.money(value) }
 
     private func moduleTile(_ module: AppModule) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -205,8 +206,11 @@ struct ComingSoonModuleView: View {
         ContentUnavailableView {
             Label(module.title, systemImage: module.systemImage)
         } description: {
-            Text("Este módulo ya existe en la web. La versión nativa se está construyendo sobre los mismos endpoints.")
+            Text("Disponible en la web. La versión nativa se construye sobre los mismos endpoints.")
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AppTheme.canvas.ignoresSafeArea())
+        .tint(AppTheme.accentMuted)
         .navigationTitle(module.title)
     }
 }

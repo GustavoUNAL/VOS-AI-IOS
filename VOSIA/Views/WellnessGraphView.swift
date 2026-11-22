@@ -15,9 +15,7 @@ struct WellnessGraphView: View {
     var body: some View {
         List {
             Section {
-                Text("Registrá cómo estás. El grafo muestra ánimo, salud, amor, amistades y familia, y cómo se relacionan en el tiempo.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                ScreenIntro(text: "Registrá cómo estás. El grafo relaciona ánimo, salud, amor, amistades y familia.")
             }
 
             Section("Check-in de hoy") {
@@ -43,7 +41,7 @@ struct WellnessGraphView: View {
             }
 
             if let errorMessage {
-                Section { Text(errorMessage).foregroundStyle(.red) }
+                Section { ScreenErrorText(message: errorMessage) }
             }
 
             Section("Historial") {
@@ -62,10 +60,11 @@ struct WellnessGraphView: View {
                         }
                     }
                 } else {
-                    Text("Todavía no hay check-ins.").foregroundStyle(.secondary)
+                    ScreenEmptyText(message: "Todavía no hay check-ins.")
                 }
             }
         }
+        .screenListChrome()
         .navigationTitle("Bienestar")
         .task { await load() }
         .refreshable { await load() }

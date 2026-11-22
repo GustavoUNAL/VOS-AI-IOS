@@ -14,9 +14,7 @@ struct LoginView: View {
                 Section {
                     Text(AppConfig.brandName)
                         .font(.largeTitle.bold())
-                    Text("Inicie sesión con la misma cuenta de la plataforma web. El motor de IA vive en el backend.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    ScreenIntro(text: "Misma cuenta que la web. El motor de IA vive en el backend.")
                 }
                 .listRowBackground(Color.clear)
 
@@ -31,10 +29,7 @@ struct LoginView: View {
                 }
 
                 if let errorMessage {
-                    Section {
-                        Text(errorMessage)
-                            .foregroundStyle(.red)
-                    }
+                    Section { ScreenErrorText(message: errorMessage) }
                 }
 
                 Section {
@@ -66,8 +61,10 @@ struct LoginView: View {
                         .foregroundStyle(.tertiary)
                 }
             }
+            .screenListChrome()
             .navigationTitle("Acceso")
         }
+        .tint(AppTheme.accentMuted)
     }
 
     private func submitPassword() async {

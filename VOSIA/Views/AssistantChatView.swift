@@ -45,6 +45,7 @@ struct AssistantChatView: View {
                     }
                     .padding()
                 }
+                .background(AppTheme.canvas)
                 .onChange(of: model.messages.count) { _, _ in
                     scrollToBottom(proxy)
                 }
@@ -56,9 +57,7 @@ struct AssistantChatView: View {
 
             if let error = model.errorMessage {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(error)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
+                    ScreenErrorText(message: error)
                     if model.lastFailedPrompt != nil {
                         Button("Reintentar") {
                             Task { await model.retryLast() }
@@ -69,7 +68,7 @@ struct AssistantChatView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
                 .padding(.vertical, 8)
-                .background(Color.red.opacity(0.08))
+                .background(AppTheme.danger.opacity(0.08))
             }
 
             HStack(alignment: .bottom, spacing: 10) {
@@ -82,13 +81,15 @@ struct AssistantChatView: View {
                 } label: {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.title)
+                        .foregroundStyle(AppTheme.accentMuted)
                 }
                 .disabled(model.isSending || model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .padding()
             .background(.bar)
         }
-        .navigationTitle(AppConfig.brandName)
+        .tint(AppTheme.accentMuted)
+        .navigationTitle("Asistente")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -101,23 +102,12 @@ struct AssistantChatView: View {
     }
 
     private func bubble(_ message: ChatMessage) -> some View {
-        HStack {
-            if message.role == .user { Spacer(minLength: 40) }
-            VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 4) {
-                if message.role == .assistant {
-                    Text("Asistente · datos del backend")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    MarkdownText(text: message.text)
-                } else {
-                    Text(message.text)
-                }
-            }
-            .padding(12)
-            .background(message.role == .user ? Color.accentColor.opacity(0.18) : Color(.secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            if message.role == .assistant { Spacer(minLength: 40) }
-        }
+        ChatBubble(
+            isUser: message.role == .user,
+            authorLabel: message.role == .assistant ? "Asistente" : "Vos",
+            text: message.text,
+            useMarkdown: message.role == .assistant
+        )
     }
 
     private func scrollToBottom(_ proxy: ScrollViewProxy) {

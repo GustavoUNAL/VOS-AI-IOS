@@ -19,9 +19,7 @@ struct PlatformHomeView: View {
         NavigationStack {
             List {
                 Section {
-                    Text("Panel de plataforma. Elija una empresa para operar con el mismo backend que la web.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    ScreenIntro(text: "Panel de plataforma. Elegí una empresa para operar con el mismo backend que la web.")
                 }
 
                 Section {
@@ -34,8 +32,7 @@ struct PlatformHomeView: View {
                     if isLoading && session.platformCompanies.isEmpty {
                         ProgressView()
                     } else if filtered.isEmpty {
-                        Text("No hay empresas para mostrar.")
-                            .foregroundStyle(.secondary)
+                        ScreenEmptyText(message: "No hay empresas para mostrar.")
                     } else {
                         ForEach(filtered) { company in
                             Button {
@@ -57,9 +54,7 @@ struct PlatformHomeView: View {
                 }
 
                 if let errorMessage {
-                    Section {
-                        Text(errorMessage).foregroundStyle(.red)
-                    }
+                    Section { ScreenErrorText(message: errorMessage) }
                 }
 
                 Section {
@@ -68,6 +63,7 @@ struct PlatformHomeView: View {
                     }
                 }
             }
+            .screenListChrome()
             .navigationTitle("Plataforma")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

@@ -15,15 +15,13 @@ struct BusinessFinanceView: View {
     var body: some View {
         List {
             Section {
-                Text(isService
-                     ? "Dinero de la empresa a partir de obras y servicios cobrados."
-                     : "Resumen financiero del periodo (ventas, compras y neto).")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                ScreenIntro(text: isService
+                    ? "Dinero de la empresa a partir de obras y servicios cobrados."
+                    : "Resumen financiero del periodo (ventas, compras y neto).")
             }
 
             if let errorMessage {
-                Section { Text(errorMessage).foregroundStyle(.red) }
+                Section { ScreenErrorText(message: errorMessage) }
             }
 
             if isLoading {
@@ -33,27 +31,20 @@ struct BusinessFinanceView: View {
                     LabeledContent("Total obras", value: "\(projectSummary.total)")
                     LabeledContent("En ejecución", value: "\(projectSummary.inProgress)")
                     LabeledContent("Cobrados", value: "\(projectSummary.completed)")
-                    LabeledContent("Cobrado acumulado", value: money(projectSummary.chargedTotal))
+                    LabeledContent("Cobrado acumulado", value: AppTheme.money(projectSummary.chargedTotal))
                 }
             } else {
                 Section("Periodo") {
-                    LabeledContent("Ventas", value: money(salesTotal ?? 0))
-                    LabeledContent("Compras", value: money(purchasesTotal ?? 0))
-                    LabeledContent("Neto aprox.", value: money(netTotal ?? 0))
+                    LabeledContent("Ventas", value: AppTheme.money(salesTotal ?? 0))
+                    LabeledContent("Compras", value: AppTheme.money(purchasesTotal ?? 0))
+                    LabeledContent("Neto aprox.", value: AppTheme.money(netTotal ?? 0))
                 }
             }
         }
+        .screenListChrome()
         .navigationTitle("Finanzas")
         .task { await load() }
         .refreshable { await load() }
-    }
-
-    private func money(_ value: Double) -> String {
-        let f = NumberFormatter()
-        f.numberStyle = .currency
-        f.currencyCode = "COP"
-        f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: value)) ?? "\(Int(value))"
     }
 
     private func load() async {

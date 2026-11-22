@@ -15,9 +15,7 @@ struct PersonalCalendarView: View {
     var body: some View {
         List {
             Section {
-                Text("Agenda personal en la base de datos. Podés exportar cada evento al Calendario del iPhone.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                ScreenIntro(text: "Agenda personal. Podés exportar cada evento al Calendario del iPhone.")
             }
 
             Section("Nuevo evento") {
@@ -32,18 +30,17 @@ struct PersonalCalendarView: View {
             }
 
             if let errorMessage {
-                Section { Text(errorMessage).foregroundStyle(.red) }
+                Section { ScreenErrorText(message: errorMessage) }
             }
             if let statusMessage {
-                Section { Text(statusMessage).foregroundStyle(.secondary) }
+                Section { Text(statusMessage).font(.footnote).foregroundStyle(.secondary) }
             }
 
             Section("Próximos") {
                 if isLoading && events.isEmpty {
                     ProgressView()
                 } else if events.isEmpty {
-                    Text("Sin eventos.")
-                        .foregroundStyle(.secondary)
+                    ScreenEmptyText(message: "Sin eventos.")
                 } else {
                     ForEach(events) { event in
                         VStack(alignment: .leading, spacing: 6) {
@@ -69,6 +66,7 @@ struct PersonalCalendarView: View {
                 }
             }
         }
+        .screenListChrome()
         .navigationTitle("Calendario")
         .task { await load() }
         .refreshable { await load() }

@@ -16,15 +16,12 @@ struct CompanyPickerView: View {
         NavigationStack {
             List {
                 Section {
-                    Text("Seleccione la empresa con la que va a trabajar. El asistente y los módulos usarán ese contexto.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    ScreenIntro(text: "Elegí la empresa. El asistente y los módulos usan ese contexto.")
                 }
 
                 Section("Empresas") {
                     if companies.isEmpty {
-                        Text("No hay empresas disponibles.")
-                            .foregroundStyle(.secondary)
+                        ScreenEmptyText(message: "No hay empresas disponibles.")
                     } else {
                         ForEach(companies) { company in
                             Button {
@@ -46,9 +43,7 @@ struct CompanyPickerView: View {
                 }
 
                 if let errorMessage {
-                    Section {
-                        Text(errorMessage).foregroundStyle(.red)
-                    }
+                    Section { ScreenErrorText(message: errorMessage) }
                 }
 
                 Section {
@@ -57,6 +52,7 @@ struct CompanyPickerView: View {
                     }
                 }
             }
+            .screenListChrome()
             .navigationTitle("Empresa")
             .overlay {
                 if isBusy { ProgressView() }

@@ -23,9 +23,7 @@ struct JournalView: View {
         @Bindable var model = model
         List {
             Section {
-                Text("Notas con título y tags. Viven en Neon: un deploy no las borra.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                ScreenIntro(text: "Notas con título y tags. Quedan guardadas y Aura puede retomarlas.")
             }
 
             Section("Escribir") {
@@ -50,8 +48,7 @@ struct JournalView: View {
                 if model.isLoading {
                     ProgressView()
                 } else if model.entries.isEmpty {
-                    Text("Todavía no hay notas.")
-                        .foregroundStyle(.secondary)
+                    ScreenEmptyText(message: "Todavía no hay notas.")
                 } else {
                     ForEach(model.entries) { entry in
                         VStack(alignment: .leading, spacing: 6) {
@@ -86,6 +83,7 @@ struct JournalView: View {
                 }
             }
         }
+        .screenListChrome()
         .navigationTitle("Notas")
         .refreshable { await model.load() }
     }

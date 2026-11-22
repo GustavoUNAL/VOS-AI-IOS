@@ -80,19 +80,19 @@ struct AccountView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Memoria del asistente") {
-                Text("El historial vive en esta sesión de la app. Web e iOS no comparten hilo en servidor.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Button("Borrar conversación local") {
-                    session.resetAssistantConversation()
+            Section("Asistentes") {
+                ScreenIntro(text: AppModule.isPersonalCompany(session.user)
+                    ? "Aura guarda la memoria en el servidor (Main). Podés limpiarla desde el chat."
+                    : "El asistente de empresa guarda el hilo en esta sesión del dispositivo.")
+                if !AppModule.isPersonalCompany(session.user) {
+                    Button("Borrar conversación local") {
+                        session.resetAssistantConversation()
+                    }
                 }
             }
 
             if let errorMessage {
-                Section {
-                    Text(errorMessage).foregroundStyle(.red)
-                }
+                Section { ScreenErrorText(message: errorMessage) }
             }
 
             Section {
@@ -114,6 +114,7 @@ struct AccountView: View {
                 }
             }
         }
+        .screenListChrome()
         .navigationTitle("Cuenta")
     }
 

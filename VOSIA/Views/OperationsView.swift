@@ -22,23 +22,18 @@ struct OperationsView: View {
     private func content(_ model: OperationsViewModel) -> some View {
         List {
             Section {
-                Text(model.disclaimer)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                ScreenIntro(text: model.disclaimer)
             }
 
             if let error = model.errorMessage {
-                Section {
-                    Text(error).foregroundStyle(.red)
-                }
+                Section { ScreenErrorText(message: error) }
             }
 
             Section("Operación del día") {
                 if model.isLoading {
                     ProgressView()
                 } else if model.rows.isEmpty {
-                    Text("Sin datos para mostrar.")
-                        .foregroundStyle(.secondary)
+                    ScreenEmptyText(message: "Sin datos para mostrar.")
                 } else {
                     ForEach(model.rows, id: \.key) { row in
                         LabeledContent(row.key, value: row.value)
@@ -46,6 +41,7 @@ struct OperationsView: View {
                 }
             }
         }
+        .screenListChrome()
         .navigationTitle("Operación")
         .refreshable { await model.load() }
     }

@@ -12,9 +12,7 @@ struct IdeasVaultView: View {
     var body: some View {
         List {
             Section {
-                Text("Vault de ideas. Se guardan en Neon y quedan después de cada deploy.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                ScreenIntro(text: "Vault de ideas. Guardalas acá o pedile a Aura: “idea: …”.")
             }
             Section("Nueva idea") {
                 TextField("Título", text: $title)
@@ -26,20 +24,21 @@ struct IdeasVaultView: View {
                               || bodyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             if let errorMessage {
-                Section { Text(errorMessage).foregroundStyle(.red) }
+                Section { ScreenErrorText(message: errorMessage) }
             }
             Section("Vault (\(ideas.count))") {
                 if isLoading && ideas.isEmpty {
                     ProgressView()
                 } else if ideas.isEmpty {
-                    Text("Todavía no hay ideas.").foregroundStyle(.secondary)
+                    ScreenEmptyText(message: "Todavía no hay ideas.")
                 } else {
                     ForEach(ideas) { idea in
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
                                 Text(idea.title).font(.headline)
                                 if idea.starred {
-                                    Image(systemName: "star.fill").foregroundStyle(.yellow)
+                                    Image(systemName: "star.fill")
+                                        .foregroundStyle(AppTheme.accentMuted)
                                 }
                             }
                             Text(idea.body).font(.body).lineLimit(5)
@@ -59,6 +58,7 @@ struct IdeasVaultView: View {
                 }
             }
         }
+        .screenListChrome()
         .navigationTitle("Ideas")
         .task { await load() }
         .refreshable { await load() }
