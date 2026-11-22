@@ -45,6 +45,8 @@ targets:
               - vosia
         NSCalendarsUsageDescription: VOS IA exporta tus eventos personales al Calendario del iPhone cuando lo pedís.
         NSCalendarsFullAccessUsageDescription: VOS IA exporta tus eventos personales al Calendario del iPhone cuando lo pedís.
+        NSMicrophoneUsageDescription: Aura usa el micrófono para que puedas hablarle en voz alta.
+        NSSpeechRecognitionUsageDescription: Aura convierte tu voz en texto para conversar con vos como un amigo.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
 schemes:

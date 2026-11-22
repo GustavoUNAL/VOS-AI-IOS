@@ -35,6 +35,10 @@
 	<string>VOS IA exporta tus eventos personales al Calendario del iPhone cuando lo pedís.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>VOS IA exporta tus eventos personales al Calendario del iPhone cuando lo pedís.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aura usa el micrófono para que puedas hablarle en voz alta.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Aura convierte tu voz en texto para conversar con vos como un amigo.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

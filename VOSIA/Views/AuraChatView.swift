@@ -6,6 +6,7 @@ struct AuraChatView: View {
     @State private var messages: [ChatMessage] = []
     @State private var isSending = false
     @State private var errorMessage: String?
+    @State private var voice = AuraVoiceService()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -46,16 +47,43 @@ struct AuraChatView: View {
                 }
             }
 
+            if voice.isListening {
+                Text(voice.liveTranscript.isEmpty ? "Te escucho… hablá nomás" : voice.liveTranscript)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.top, 6)
+            }
+
             if let errorMessage {
                 ScreenErrorText(message: errorMessage)
                     .padding(.horizontal)
                     .padding(.vertical, 6)
             }
 
+            if voice.permissionDenied {
+                ScreenErrorText(message: "Necesito micrófono y reconocimiento de voz para hablarte.")
+                    .padding(.horizontal)
+                    .padding(.bottom, 4)
+            }
+
             HStack(alignment: .bottom, spacing: 8) {
-                TextField("Hablá con Aura…", text: $draft, axis: .vertical)
+                TextField(voice.isListening ? "Escuchando…" : "Escribí o hablá con Aura…", text: $draft, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(1...5)
+                    .disabled(voice.isListening)
+
+                Button {
+                    Task { await toggleMic() }
+                } label: {
+                    Image(systemName: voice.isListening ? "stop.circle.fill" : "mic.circle.fill")
+                        .font(.title)
+                        .foregroundStyle(voice.isListening ? AppTheme.danger : AppTheme.accentMuted)
+                }
+                .disabled(isSending)
+                .accessibilityLabel(voice.isListening ? "Dejar de escuchar" : "Hablar con Aura")
+
                 Button {
                     Task { await send() }
                 } label: {
@@ -73,12 +101,43 @@ struct AuraChatView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    voice.speakReplies.toggle()
+                    if !voice.speakReplies { voice.stopSpeaking() }
+                } label: {
+                    Image(systemName: voice.speakReplies ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                }
+                .accessibilityLabel(voice.speakReplies ? "Silenciar Aura" : "Que Aura hable")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button("Limpiar") {
                     Task { await clear() }
                 }
             }
         }
+        .onDisappear {
+            voice.stopListening()
+            voice.stopSpeaking()
+        }
         .task { await bootstrap() }
+    }
+
+    private func toggleMic() async {
+        errorMessage = nil
+        if voice.isListening {
+            voice.stopListening(keepTranscript: true)
+            let spoken = voice.consumeTranscript()
+            if !spoken.isEmpty {
+                draft = spoken
+                await send()
+            }
+            return
+        }
+        voice.stopSpeaking()
+        await voice.toggleListening()
+        if voice.permissionDenied {
+            errorMessage = "Activá micrófono y reconocimiento de voz en Ajustes."
+        }
     }
 
     private func bootstrap() async {
@@ -92,6 +151,8 @@ struct AuraChatView: View {
             }
             if messages.isEmpty {
                 await send(prompt: AppConfig.sessionStartMarker, showUser: false)
+            } else if let last = messages.last, last.role == .assistant {
+                // No releer todo el historial al abrir; solo silencio.
             }
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
@@ -102,6 +163,8 @@ struct AuraChatView: View {
         let text = (prompt ?? draft).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         if prompt == nil { draft = "" }
+        voice.stopListening()
+        voice.stopSpeaking()
         isSending = true
         errorMessage = nil
         defer { isSending = false }
@@ -111,6 +174,9 @@ struct AuraChatView: View {
         do {
             let response = try await session.personal.askAura(question: text)
             messages.append(ChatMessage(role: .assistant, text: response.answer))
+            if showUser || prompt == AppConfig.sessionStartMarker {
+                voice.speak(response.answer)
+            }
         } catch {
             if showUser, messages.last?.role == .user { messages.removeLast() }
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
@@ -118,6 +184,7 @@ struct AuraChatView: View {
     }
 
     private func clear() async {
+        voice.stopSpeaking()
         do {
             try await session.personal.clearAura()
             messages = []

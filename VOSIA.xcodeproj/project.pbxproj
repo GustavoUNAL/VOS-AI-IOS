@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00113F15012A62B413ACE09F /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC1FD32DFC1E31F5D528B792 /* HomeView.swift */; };
+		04CFE59711E1D0F497A2F773 /* AuraVoiceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F04804F9615BDE8D94575C /* AuraVoiceService.swift */; };
 		0A3A0A05710063EC36F3D255 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D9953DBF3C7B5F0A457248 /* SessionStore.swift */; };
 		11CB309A55B6B2F5DDFAE035 /* AssistantViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D24E6F78C14373FE9142697 /* AssistantViewModel.swift */; };
 		181AA80D853D446F3AC26FCF /* PersonalCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3108B2F37AB2A17A9B9F11E6 /* PersonalCalendarView.swift */; };
@@ -89,6 +90,7 @@
 		AC1FD32DFC1E31F5D528B792 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		AE134CE3C94C50564A715582 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		B2F95FAB8535AB3EEE120E12 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		B3F04804F9615BDE8D94575C /* AuraVoiceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuraVoiceService.swift; sourceTree = "<group>"; };
 		C65398CD1CB4B89BE4C6AEBA /* OperationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperationsView.swift; sourceTree = "<group>"; };
 		C6B4B50E4154C0FDC3986C0B /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		CBC02577ECE5F3C671A1C111 /* JournalService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalService.swift; sourceTree = "<group>"; };
@@ -175,6 +177,7 @@
 			isa = PBXGroup;
 			children = (
 				472446A250009F422A1D8BFD /* AssistantService.swift */,
+				B3F04804F9615BDE8D94575C /* AuraVoiceService.swift */,
 				AE134CE3C94C50564A715582 /* AuthService.swift */,
 				0F77BF18487D9D8740508BBA /* DeviceCalendarService.swift */,
 				AA3CDC1CDF9EAE007185C1C0 /* GoogleAuthService.swift */,
@@ -329,6 +332,7 @@
 				2315A322756DD9514115D571 /* AssistantService.swift in Sources */,
 				11CB309A55B6B2F5DDFAE035 /* AssistantViewModel.swift in Sources */,
 				CC1D5E55A2121EBE07C2B8BD /* AuraChatView.swift in Sources */,
+				04CFE59711E1D0F497A2F773 /* AuraVoiceService.swift in Sources */,
 				8BA02E390B44AD249CF8B054 /* AuthModels.swift in Sources */,
 				19E042B88D656FAEF2C5A812 /* AuthService.swift in Sources */,
 				8AB1A27F36BFC09739A7F650 /* BusinessFinanceView.swift in Sources */,
