@@ -2,28 +2,64 @@ import SwiftUI
 
 struct PersonalFinanceView: View {
     @Environment(SessionStore.self) private var session
-    @State private var entries: [PersonalMoneyEntry] = []
-    @State private var summary: PersonalMoneySummary?
+    @State private var list: PersonalMoneyListResponse?
+    @State private var budgets: PersonalMoneyBudgetListResponse?
     @State private var kind: PersonalMoneyKind = .EXPENSE
     @State private var amount = ""
-    @State private var category = "general"
+    @State private var category = "comida"
     @State private var note = ""
+    @State private var budgetCategory = "comida"
+    @State private var budgetLimit = ""
     @State private var errorMessage: String?
     @State private var isLoading = false
+
+    private var monthKey: String {
+        String(ISO8601DateFormatter().string(from: Date()).prefix(7))
+    }
 
     var body: some View {
         List {
             Section {
-                Text("Control de dinero personal. Se guarda en la base de datos de VOS IA (Neon) y no se borra al desplegar.")
+                Text("Finanzas personales completas: movimientos, categorías y presupuestos. Persistente en Neon.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
 
-            if let summary {
+            if let summary = list?.summary {
                 Section("Resumen") {
                     LabeledContent("Ingresos", value: money(summary.incomeCOP))
                     LabeledContent("Gastos", value: money(summary.expenseCOP))
                     LabeledContent("Balance", value: money(summary.balanceCOP))
+                }
+            }
+
+            if let byCategory = list?.byCategory, !byCategory.isEmpty {
+                Section("Por categoría") {
+                    ForEach(byCategory, id: \.category) { row in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(row.category).font(.subheadline.weight(.semibold))
+                            Text("In \(money(row.incomeCOP)) · Out \(money(row.expenseCOP))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+
+            Section("Presupuestos \(monthKey)") {
+                TextField("Categoría", text: $budgetCategory)
+                TextField("Tope COP", text: $budgetLimit)
+                    .keyboardType(.decimalPad)
+                Button("Guardar presupuesto") { Task { await saveBudget() } }
+                if let budgets {
+                    ForEach(budgets.budgets) { budget in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(budget.category).font(.subheadline.weight(.semibold))
+                            Text("Gastado \(money(budget.spentCOP ?? 0)) / \(money(budget.limitCOP)) · Queda \(money(budget.remainingCOP ?? 0))")
+                                .font(.caption)
+                                .foregroundStyle((budget.remainingCOP ?? 0) < 0 ? .red : .secondary)
+                        }
+                    }
                 }
             }
 
@@ -37,10 +73,7 @@ struct PersonalFinanceView: View {
                     .keyboardType(.decimalPad)
                 TextField("Categoría", text: $category)
                 TextField("Nota", text: $note)
-                Button("Guardar") {
-                    Task { await save() }
-                }
-                .disabled(isLoading)
+                Button("Guardar") { Task { await save() } }
             }
 
             if let errorMessage {
@@ -48,17 +81,13 @@ struct PersonalFinanceView: View {
             }
 
             Section("Movimientos") {
-                if isLoading && entries.isEmpty {
+                if isLoading && list?.entries.isEmpty != false {
                     ProgressView()
-                } else if entries.isEmpty {
-                    Text("Todavía no hay movimientos.")
-                        .foregroundStyle(.secondary)
-                } else {
+                } else if let entries = list?.entries, !entries.isEmpty {
                     ForEach(entries) { entry in
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text(entry.kind.label)
-                                    .font(.subheadline.weight(.semibold))
+                                Text(entry.kind.label).font(.subheadline.weight(.semibold))
                                 Spacer()
                                 Text(money(entry.amountCOP))
                                     .foregroundStyle(entry.kind == .INCOME ? .green : .primary)
@@ -76,6 +105,8 @@ struct PersonalFinanceView: View {
                             }
                         }
                     }
+                } else {
+                    Text("Todavía no hay movimientos.").foregroundStyle(.secondary)
                 }
             }
         }
@@ -94,41 +125,56 @@ struct PersonalFinanceView: View {
 
     private func load() async {
         isLoading = true
-        errorMessage = nil
         defer { isLoading = false }
         do {
-            let response = try await session.personal.listMoney()
-            entries = response.entries
-            summary = response.summary
+            async let money = session.personal.listMoney()
+            async let budget = session.personal.listBudgets(month: monthKey)
+            list = try await money
+            budgets = try await budget
+            errorMessage = nil
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
     }
 
     private func save() async {
-        guard let amountCOP = Double(amount.replacingOccurrences(of: ",", with: ".")),
-              amountCOP > 0 else {
+        guard let amountCOP = Double(amount.replacingOccurrences(of: ",", with: ".")), amountCOP > 0 else {
             errorMessage = "Ingrese un monto válido."
             return
         }
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
         do {
-            let day = ISO8601DateFormatter().string(from: Date()).prefix(10)
+            let day = String(ISO8601DateFormatter().string(from: Date()).prefix(10))
             _ = try await session.personal.createMoney(
                 UpsertPersonalMoneyRequest(
                     kind: kind.rawValue,
                     amountCOP: amountCOP,
-                    category: category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        ? "general"
-                        : category,
-                    note: note.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
-                    occurredOn: String(day)
+                    category: category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "general" : category.lowercased(),
+                    note: note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : note,
+                    occurredOn: day
                 )
             )
             amount = ""
             note = ""
+            await load()
+        } catch {
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
+    }
+
+    private func saveBudget() async {
+        guard let limit = Double(budgetLimit.replacingOccurrences(of: ",", with: ".")), limit >= 0 else {
+            errorMessage = "Tope inválido."
+            return
+        }
+        do {
+            _ = try await session.personal.upsertBudget(
+                UpsertPersonalMoneyBudgetRequest(
+                    category: budgetCategory.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                    month: monthKey,
+                    limitCOP: limit
+                )
+            )
+            budgetLimit = ""
             await load()
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
@@ -142,12 +188,5 @@ struct PersonalFinanceView: View {
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
-    }
-}
-
-private extension String {
-    var nilIfEmpty: String? {
-        let t = trimmingCharacters(in: .whitespacesAndNewlines)
-        return t.isEmpty ? nil : t
     }
 }

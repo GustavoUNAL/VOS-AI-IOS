@@ -26,25 +26,45 @@ struct RootView: View {
 struct MainTabView: View {
     @Environment(SessionStore.self) private var session
 
+    private var isPersonal: Bool { AppModule.isPersonalCompany(session.user) }
+
     var body: some View {
         TabView {
             HomeView()
-                .tabItem { Label("Inicio", systemImage: "square.grid.2x2") }
+                .tabItem { Label(isPersonal ? "Main" : "Inicio", systemImage: "square.grid.2x2") }
 
             NavigationStack {
-                AssistantChatView()
+                if isPersonal {
+                    VicenteChatView()
+                } else {
+                    AssistantChatView()
+                }
             }
-            .tabItem { Label("Asistente", systemImage: "bubble.left.and.bubble.right") }
+            .tabItem {
+                Label(isPersonal ? "Vicente" : "Asistente",
+                      systemImage: isPersonal ? "sparkles" : "bubble.left.and.bubble.right")
+            }
 
             NavigationStack {
-                JournalView()
+                if isPersonal {
+                    JournalView()
+                } else {
+                    JournalView()
+                }
             }
-            .tabItem { Label("Diario", systemImage: "book") }
+            .tabItem { Label(isPersonal ? "Notas" : "Diario", systemImage: "book.pages") }
 
             NavigationStack {
-                OperationsView()
+                if isPersonal {
+                    PersonalFinanceView()
+                } else {
+                    OperationsView()
+                }
             }
-            .tabItem { Label("Operación", systemImage: "chart.bar") }
+            .tabItem {
+                Label(isPersonal ? "Finanzas" : "Operación",
+                      systemImage: isPersonal ? "banknote" : "chart.bar")
+            }
 
             NavigationStack {
                 AccountView()

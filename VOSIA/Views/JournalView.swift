@@ -23,17 +23,19 @@ struct JournalView: View {
         @Bindable var model = model
         List {
             Section {
-                Text("Notas del diario en la base de datos (Neon). Un deploy no las borra: solo se pierden si se elimina la empresa o la nota a mano.")
+                Text("Notas con título y tags. Viven en Neon: un deploy no las borra.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
 
             Section("Escribir") {
+                TextField("Título (opcional)", text: $model.titleDraft)
+                TextField("Tags (coma)", text: $model.tagsDraft)
                 TextEditor(text: $model.draft)
-                    .frame(minHeight: 120)
-                    .onChange(of: model.draft) { _, _ in
-                        model.scheduleAutosave()
-                    }
+                    .frame(minHeight: 140)
+                    .onChange(of: model.draft) { _, _ in model.scheduleAutosave() }
+                    .onChange(of: model.titleDraft) { _, _ in model.scheduleAutosave() }
+                    .onChange(of: model.tagsDraft) { _, _ in model.scheduleAutosave() }
                 HStack {
                     Text(model.errorMessage ?? model.status)
                         .font(.caption)
@@ -48,7 +50,7 @@ struct JournalView: View {
                 if model.isLoading {
                     ProgressView()
                 } else if model.entries.isEmpty {
-                    Text("Todavía no hay notas en esta empresa.")
+                    Text("Todavía no hay notas.")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(model.entries) { entry in
@@ -57,13 +59,18 @@ struct JournalView: View {
                                 model.open(entry)
                             } label: {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(entry.authorName)
-                                        .font(.subheadline.weight(.semibold))
+                                    Text(entry.title?.isEmpty == false ? entry.title! : "Sin título")
+                                        .font(.headline)
                                         .foregroundStyle(.primary)
                                     Text(entry.body)
                                         .font(.body)
                                         .foregroundStyle(.primary)
                                         .lineLimit(4)
+                                    if let tags = entry.tags, !tags.isEmpty {
+                                        Text(tags.joined(separator: " · "))
+                                            .font(.caption2)
+                                            .foregroundStyle(.secondary)
+                                    }
                                     Text(entry.updatedAt)
                                         .font(.caption2)
                                         .foregroundStyle(.secondary)
@@ -79,7 +86,7 @@ struct JournalView: View {
                 }
             }
         }
-        .navigationTitle("Diario")
+        .navigationTitle("Notas")
         .refreshable { await model.load() }
     }
 }

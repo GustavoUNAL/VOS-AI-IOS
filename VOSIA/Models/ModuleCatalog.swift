@@ -1,12 +1,14 @@
 import Foundation
 
 enum AppModule: String, CaseIterable, Identifiable, Hashable {
-    case assistant
+    case vicente
     case journal
-    case operations
+    case ideas
     case financePersonal = "finance-personal"
     case time
     case calendarPersonal = "calendar-personal"
+    case wellness
+    case operations
     case products
     case recipes
     case inventory
@@ -26,12 +28,14 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .assistant: return "Asistente"
-        case .journal: return "Diario"
-        case .operations: return "Operación"
+        case .vicente: return "Vicente"
+        case .journal: return "Notas"
+        case .ideas: return "Ideas"
         case .financePersonal: return "Finanzas"
         case .time: return "Tiempo"
         case .calendarPersonal: return "Calendario"
+        case .wellness: return "Bienestar"
+        case .operations: return "Operación"
         case .products: return "Catálogo"
         case .recipes: return "Recetas"
         case .inventory: return "Stock"
@@ -49,14 +53,29 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    var subtitle: String {
+        switch self {
+        case .vicente: return "Tu asistente personal"
+        case .journal: return "Diario que no se borra"
+        case .ideas: return "Vault de ideas"
+        case .financePersonal: return "Dinero consciente"
+        case .time: return "Pendientes del día"
+        case .calendarPersonal: return "Agenda + iPhone"
+        case .wellness: return "Ánimo, salud y vínculos"
+        default: return ""
+        }
+    }
+
     var systemImage: String {
         switch self {
-        case .assistant: return "bubble.left.and.bubble.right"
-        case .journal: return "book"
-        case .operations: return "chart.bar"
+        case .vicente: return "sparkles"
+        case .journal: return "book.pages"
+        case .ideas: return "lightbulb.max"
         case .financePersonal: return "banknote"
         case .time: return "clock"
         case .calendarPersonal: return "calendar"
+        case .wellness: return "heart.circle"
+        case .operations: return "chart.bar"
         case .products: return "square.grid.2x2"
         case .recipes: return "list.bullet.clipboard"
         case .inventory: return "shippingbox"
@@ -76,38 +95,40 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
 
     var isNativeReady: Bool {
         switch self {
-        case .assistant, .journal, .operations, .account,
-             .financePersonal, .time, .calendarPersonal:
+        case .vicente, .journal, .ideas, .financePersonal, .time, .calendarPersonal, .wellness, .operations, .account, .tasks:
             return true
         default:
             return false
         }
     }
 
-    static func launcher(for user: AuthUser?) -> [AppModule] {
-        let permissions = Set(user?.permissions ?? [])
-        let isAdmin = user?.isPlatformAdmin == true
-            || permissions.contains("platform.admin")
+    static func isPersonalCompany(_ user: AuthUser?) -> Bool {
         let businessType = user?.companies
             .first(where: { $0.id == user?.companyId })?
             .businessType?
             .lowercased()
-        let isPersonal = businessType == "personal"
+        return businessType == "personal"
             || user?.companyId == "seed-main"
             || (user?.companySlug.lowercased() == "main")
             || (user?.companyName.lowercased() == "main")
+    }
 
-        if isPersonal {
+    static func launcher(for user: AuthUser?) -> [AppModule] {
+        if isPersonalCompany(user) {
             return [
-                .assistant,
+                .vicente,
                 .journal,
+                .ideas,
                 .financePersonal,
                 .time,
                 .calendarPersonal,
+                .wellness,
                 .account,
             ]
         }
 
+        let permissions = Set(user?.permissions ?? [])
+        let isAdmin = user?.isPlatformAdmin == true || permissions.contains("platform.admin")
         func can(_ needles: String...) -> Bool {
             if isAdmin { return true }
             return needles.contains { needle in
@@ -115,14 +136,10 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
             }
         }
 
-        var apps: [AppModule] = [.assistant, .journal, .operations]
+        var apps: [AppModule] = [.vicente, .journal, .operations]
         if can("products.", "products.view") { apps.append(.products) }
-        if can("inventory.", "inventory.view") {
-            apps.append(contentsOf: [.recipes, .inventory])
-        }
-        if can("sales.", "sales.view") {
-            apps.append(contentsOf: [.sales, .pos, .shop, .cashClose])
-        }
+        if can("inventory.", "inventory.view") { apps.append(contentsOf: [.recipes, .inventory]) }
+        if can("sales.", "sales.view") { apps.append(contentsOf: [.sales, .pos, .shop, .cashClose]) }
         if can("purchases.", "purchases.view") { apps.append(.purchases) }
         if can("staff.", "staff.view") { apps.append(.staff) }
         if can("tasks.", "tasks.view") { apps.append(.tasks) }

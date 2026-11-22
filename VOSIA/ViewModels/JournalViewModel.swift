@@ -8,6 +8,8 @@ final class JournalViewModel {
 
     var entries: [JournalEntry] = []
     var draft = ""
+    var titleDraft = ""
+    var tagsDraft = ""
     var editingId: String?
     var status = "Listo para escribir"
     var errorMessage: String?
@@ -51,6 +53,8 @@ final class JournalViewModel {
         saveTask?.cancel()
         editingId = nil
         draft = ""
+        titleDraft = ""
+        tagsDraft = ""
         status = "Nueva nota"
         errorMessage = nil
     }
@@ -59,6 +63,8 @@ final class JournalViewModel {
         saveTask?.cancel()
         editingId = entry.id
         draft = entry.body
+        titleDraft = entry.title ?? ""
+        tagsDraft = (entry.tags ?? []).joined(separator: ", ")
         status = "Nota de \(entry.authorName)"
         errorMessage = nil
     }
@@ -73,21 +79,38 @@ final class JournalViewModel {
         }
     }
 
+    private var parsedTags: [String] {
+        tagsDraft
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty }
+    }
+
     private func persist(_ text: String) async {
         isSaving = true
-        status = "Guardando…"
+        status = "Guardando en Neon…"
         defer { isSaving = false }
         do {
+            let title = titleDraft.trimmingCharacters(in: .whitespacesAndNewlines)
             let saved: JournalEntry
             if let id = editingId {
-                saved = try await session.journal.update(id: id, body: text)
+                saved = try await session.journal.update(
+                    id: id,
+                    body: text,
+                    title: title.isEmpty ? nil : title,
+                    tags: parsedTags
+                )
             } else {
-                saved = try await session.journal.create(body: text)
+                saved = try await session.journal.create(
+                    body: text,
+                    title: title.isEmpty ? nil : title,
+                    tags: parsedTags
+                )
                 editingId = saved.id
             }
             entries.removeAll { $0.id == saved.id }
             entries.insert(saved, at: 0)
-            status = "Guardado en esta empresa"
+            status = "Guardado · no se borra al desplegar"
             errorMessage = nil
         } catch {
             status = "Sin guardar"

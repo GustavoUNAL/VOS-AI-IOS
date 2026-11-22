@@ -2,6 +2,8 @@ import Foundation
 
 struct JournalEntry: Codable, Identifiable, Hashable {
     let id: String
+    let title: String?
+    let tags: [String]?
     let body: String
     let createdAt: String
     let updatedAt: String
@@ -15,6 +17,8 @@ struct JournalListResponse: Codable {
 
 struct UpsertJournalRequest: Encodable {
     let body: String
+    let title: String?
+    let tags: [String]
 }
 
 struct OkResponse: Codable {

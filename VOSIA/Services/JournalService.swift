@@ -17,21 +17,21 @@ final class JournalService {
         return response.entries
     }
 
-    func create(body: String) async throws -> JournalEntry {
+    func create(body: String, title: String?, tags: [String]) async throws -> JournalEntry {
         try await client.request(
             "POST",
             path: "journal",
-            body: UpsertJournalRequest(body: body),
+            body: UpsertJournalRequest(body: body, title: title, tags: tags),
             authenticated: true,
             requiresCompany: true
         )
     }
 
-    func update(id: String, body: String) async throws -> JournalEntry {
+    func update(id: String, body: String, title: String?, tags: [String]) async throws -> JournalEntry {
         try await client.request(
             "PATCH",
             path: "journal/\(id)",
-            body: UpsertJournalRequest(body: body),
+            body: UpsertJournalRequest(body: body, title: title, tags: tags),
             authenticated: true,
             requiresCompany: true
         )
