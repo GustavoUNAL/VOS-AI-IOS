@@ -6,6 +6,7 @@ struct LoginView: View {
     @State private var password = ""
     @State private var isBusy = false
     @State private var errorMessage: String?
+    @State private var googleAuth = GoogleAuthService()
 
     var body: some View {
         NavigationStack {
@@ -22,7 +23,7 @@ struct LoginView: View {
                 Section("Cuenta") {
                     TextField("Usuario o correo", text: $email)
                         .textContentType(.username)
-                        .keyboardType(.ASCIICapable)
+                        .keyboardType(.asciiCapable)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     SecureField("Contraseña", text: $password)
@@ -38,7 +39,7 @@ struct LoginView: View {
 
                 Section {
                     Button {
-                        Task { await submit() }
+                        Task { await submitPassword() }
                     } label: {
                         if isBusy {
                             ProgressView()
@@ -49,6 +50,14 @@ struct LoginView: View {
                         }
                     }
                     .disabled(isBusy || email.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty)
+
+                    Button {
+                        Task { await submitGoogle() }
+                    } label: {
+                        Text("Continuar con Google")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .disabled(isBusy)
                 }
 
                 Section {
@@ -61,7 +70,7 @@ struct LoginView: View {
         }
     }
 
-    private func submit() async {
+    private func submitPassword() async {
         isBusy = true
         errorMessage = nil
         defer { isBusy = false }
@@ -69,6 +78,44 @@ struct LoginView: View {
             try await session.login(email: email, password: password)
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
+    }
+
+    private func submitGoogle() async {
+        isBusy = true
+        errorMessage = nil
+        defer { isBusy = false }
+        do {
+            let outcome = try await googleAuth.signIn(apiBaseURL: AppConfig.apiBaseURL)
+            switch outcome {
+            case .accessToken(let token):
+                try await session.completeGoogleSignIn(accessToken: token)
+            case .signup:
+                errorMessage = "Esta cuenta de Google aún no tiene usuario en VOS IA. Completá el registro en la web."
+            case .error(let code):
+                errorMessage = googleErrorMessage(code)
+            }
+        } catch is CancellationError {
+            // Usuario canceló el sheet de Google.
+        } catch {
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
+    }
+
+    private func googleErrorMessage(_ code: String) -> String {
+        switch code {
+        case "no_account":
+            return "No hay cuenta VOS IA asociada a ese Google."
+        case "inactive":
+            return "La cuenta está inactiva."
+        case "no_company":
+            return "La cuenta no tiene empresas activas."
+        case "access_denied":
+            return "Acceso denegado en Google."
+        case "not_configured":
+            return "Google OAuth no está configurado en el servidor."
+        default:
+            return "No se pudo completar el inicio con Google (\(code))."
         }
     }
 }

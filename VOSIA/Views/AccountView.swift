@@ -4,6 +4,7 @@ struct AccountView: View {
     @Environment(SessionStore.self) private var session
     @State private var errorMessage: String?
     @State private var isRefreshing = false
+    @State private var isReturning = false
 
     var body: some View {
         List {
@@ -12,6 +13,9 @@ struct AccountView: View {
                     LabeledContent("Nombre", value: user.name)
                     LabeledContent("Correo", value: user.email)
                     LabeledContent("Rol", value: user.role)
+                    if user.isPlatformAdmin == true {
+                        LabeledContent("Plataforma", value: "Administrador")
+                    }
                 }
 
                 Section("Empresa activa") {
@@ -25,7 +29,22 @@ struct AccountView: View {
                     }
                 }
 
-                if user.companies.count > 1 || user.isPlatformAdmin == true {
+                if user.isPlatformAdmin == true, session.companyId != nil {
+                    Section {
+                        Button {
+                            Task { await goPlatformHome() }
+                        } label: {
+                            if isReturning {
+                                ProgressView()
+                            } else {
+                                Label("Volver al panel de plataforma", systemImage: "building.2")
+                            }
+                        }
+                        .disabled(isReturning)
+                    }
+                }
+
+                if !user.companies.isEmpty {
                     Section("Cambiar empresa") {
                         ForEach(user.companies) { company in
                             Button {
@@ -62,7 +81,7 @@ struct AccountView: View {
             }
 
             Section("Memoria del asistente") {
-                Text("El historial vive en esta sesión de la app. AiConversation existe en Prisma pero no está cableada en el backend; web e iOS no comparten hilo en servidor.")
+                Text("El historial vive en esta sesión de la app. Web e iOS no comparten hilo en servidor.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Button("Borrar conversación local") {
@@ -96,5 +115,16 @@ struct AccountView: View {
             }
         }
         .navigationTitle("Cuenta")
+    }
+
+    private func goPlatformHome() async {
+        isReturning = true
+        errorMessage = nil
+        defer { isReturning = false }
+        do {
+            try await session.returnToPlatformHome()
+        } catch {
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        }
     }
 }

@@ -39,6 +39,12 @@ targets:
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         VOS_API_BASE_URL: $(VOS_API_BASE_URL)
+        CFBundleURLTypes:
+          - CFBundleURLName: com.vosia.app.native
+            CFBundleURLSchemes:
+              - vosia
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
 schemes:
   VOSIA:
     build:

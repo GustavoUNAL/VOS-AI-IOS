@@ -43,14 +43,26 @@ xcodebuild -project VOSIA.xcodeproj -scheme VOSIA \
 
 ## Contrato con el backend
 
-- `POST /auth/login` → JWT (Keychain)
+- `POST /auth/login` → JWT (Keychain); acepta usuario corto (`omar`) o email
+- `GET /auth/google?mobile=1` → deep link `vosia://google-auth?access_token=…`
 - `GET /auth/me`
+- `GET /platform/companies` (platform admin)
+- `POST /auth/platform/enter-company` (sin `reason`)
+- `POST /auth/platform/home`
 - `POST /assistant/ask` con `{ question, history? }` → `{ answer }`
 - `GET/POST/PATCH/DELETE /journal`
+- `GET /operations/day`
 - Header `Authorization: Bearer …`
 - Header `X-Company-Id` cuando hay empresa activa
 
 El historial del chat vive en la app (igual que la web). No hay segundo motor de IA.
+
+## Flujo actual
+
+1. Login (password o Google).
+2. Platform admin → lista de empresas (`/platform/companies`).
+3. Al entrar a una empresa → Inicio (launcher) + Asistente + Diario + Operación + Cuenta.
+4. Módulos aún no nativos aparecen como “Próximamente” (mismos endpoints que la web).
 
 ## Nota
 

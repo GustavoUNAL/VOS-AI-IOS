@@ -12,14 +12,16 @@ final class SessionStore: TokenProviding {
     private(set) var user: AuthUser?
     private(set) var isBootstrapping = true
     private(set) var lastError: String?
+    private(set) var platformCompanies: [PlatformCompany] = []
 
     let api: APIClient
     let auth: AuthService
     let assistant: AssistantService
     let journal: JournalService
     let operations: OperationsService
+    let platform: PlatformService
 
-    /// Historial del asistente en memoria de proceso (no en servidor).
+    /// Historial del asistente en memoria de dispositivo (no en servidor).
     var assistantMessages: [ChatMessage] = []
     var didStartAssistantSession = false
 
@@ -30,10 +32,17 @@ final class SessionStore: TokenProviding {
         self.assistant = AssistantService(client: client)
         self.journal = JournalService(client: client)
         self.operations = OperationsService(client: client)
+        self.platform = PlatformService(client: client)
         client.tokens = self
     }
 
     var isAuthenticated: Bool { accessToken != nil && user != nil }
+
+    var isPlatformHome: Bool {
+        guard let user else { return false }
+        if user.isPlatformAdmin == true, user.platformView == true { return true }
+        return user.isPlatformAdmin == true && companyId == nil
+    }
 
     func bootstrap() async {
         isBootstrapping = true
@@ -47,6 +56,9 @@ final class SessionStore: TokenProviding {
         do {
             let me = try await auth.me()
             apply(session: me, token: accessToken!)
+            if isPlatformHome {
+                try? await refreshPlatformCompanies()
+            }
         } catch {
             clearSession()
             lastError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
@@ -63,11 +75,29 @@ final class SessionStore: TokenProviding {
         )
         persistToken(response.accessToken)
         apply(session: response.user, token: response.accessToken)
+        if isPlatformHome {
+            try await refreshPlatformCompanies()
+        }
+    }
+
+    func completeGoogleSignIn(accessToken: String) async throws {
+        lastError = nil
+        persistToken(accessToken)
+        let me = try await auth.me()
+        apply(session: me, token: accessToken)
+        if isPlatformHome {
+            try await refreshPlatformCompanies()
+        }
     }
 
     func refreshProfile() async throws {
         let me = try await auth.me()
         apply(session: me, token: accessToken ?? "")
+    }
+
+    func refreshPlatformCompanies() async throws {
+        platformCompanies = try await platform.listCompanies()
+            .filter { ($0.status ?? "ACTIVE").uppercased() == "ACTIVE" }
     }
 
     func selectCompany(_ company: CompanySummary) async throws {
@@ -81,6 +111,15 @@ final class SessionStore: TokenProviding {
         persistToken(response.accessToken)
         apply(session: response.user, token: response.accessToken)
         resetAssistantConversation()
+    }
+
+    func returnToPlatformHome() async throws {
+        lastError = nil
+        let response = try await auth.returnToPlatformHome()
+        persistToken(response.accessToken)
+        apply(session: response.user, token: response.accessToken)
+        resetAssistantConversation()
+        try await refreshPlatformCompanies()
     }
 
     func logout() {
@@ -101,7 +140,7 @@ final class SessionStore: TokenProviding {
         if let id = session.activeCompanyId {
             companyId = id
             try? KeychainStore.set(id, forKey: companyKey)
-        } else if session.needsCompanySelection {
+        } else if session.needsCompanySelection || session.isPlatformAdmin == true {
             companyId = nil
             KeychainStore.delete(forKey: companyKey)
         }
@@ -116,6 +155,7 @@ final class SessionStore: TokenProviding {
         accessToken = nil
         companyId = nil
         user = nil
+        platformCompanies = []
         KeychainStore.delete(forKey: tokenKey)
         KeychainStore.delete(forKey: companyKey)
     }

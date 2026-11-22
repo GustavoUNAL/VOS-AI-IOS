@@ -12,6 +12,22 @@ struct CompanySummary: Codable, Identifiable, Hashable {
         case id, name, slug, role, modules, businessType
     }
 
+    init(
+        id: String,
+        name: String,
+        slug: String,
+        role: String = "",
+        modules: [String] = [],
+        businessType: String? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.slug = slug
+        self.role = role
+        self.modules = modules
+        self.businessType = businessType
+    }
+
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)

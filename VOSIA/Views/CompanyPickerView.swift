@@ -5,6 +5,13 @@ struct CompanyPickerView: View {
     @State private var isBusy = false
     @State private var errorMessage: String?
 
+    private var companies: [CompanySummary] {
+        if !(session.user?.companies.isEmpty ?? true) {
+            return session.user?.companies ?? []
+        }
+        return session.platformCompanies.map(\.asCompanySummary)
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -15,21 +22,26 @@ struct CompanyPickerView: View {
                 }
 
                 Section("Empresas") {
-                    ForEach(session.user?.companies ?? []) { company in
-                        Button {
-                            Task { await select(company) }
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(company.name)
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                                Text("e/\(company.slug) · \(company.role)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                    if companies.isEmpty {
+                        Text("No hay empresas disponibles.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(companies) { company in
+                            Button {
+                                Task { await select(company) }
+                            } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(company.name)
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                    Text("e/\(company.slug) · \(company.role)")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.vertical, 4)
                             }
-                            .padding(.vertical, 4)
+                            .disabled(isBusy)
                         }
-                        .disabled(isBusy)
                     }
                 }
 
@@ -48,6 +60,15 @@ struct CompanyPickerView: View {
             .navigationTitle("Empresa")
             .overlay {
                 if isBusy { ProgressView() }
+            }
+            .task {
+                if session.user?.isPlatformAdmin == true, session.user?.companies.isEmpty == true {
+                    do {
+                        try await session.refreshPlatformCompanies()
+                    } catch {
+                        errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                    }
+                }
             }
         }
     }

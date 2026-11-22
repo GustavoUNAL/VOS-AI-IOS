@@ -42,6 +42,14 @@ final class AuthService {
             authenticated: true
         )
     }
+
+    func returnToPlatformHome() async throws -> LoginResponse {
+        try await client.request(
+            "POST",
+            path: "auth/platform/home",
+            authenticated: true
+        )
+    }
 }
 
 private extension String {

@@ -9,6 +9,8 @@ struct RootView: View {
                 ProgressView("Restaurando sesión…")
             } else if !session.isAuthenticated {
                 LoginView()
+            } else if session.isPlatformHome {
+                PlatformHomeView()
             } else if session.user?.needsCompanySelection == true || session.companyId == nil {
                 CompanyPickerView()
             } else {
@@ -26,6 +28,9 @@ struct MainTabView: View {
 
     var body: some View {
         TabView {
+            HomeView()
+                .tabItem { Label("Inicio", systemImage: "square.grid.2x2") }
+
             NavigationStack {
                 AssistantChatView()
             }
