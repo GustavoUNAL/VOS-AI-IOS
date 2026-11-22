@@ -70,24 +70,38 @@ final class PersonalService {
         try await client.request("PUT", path: "personal/wellness", body: body, authenticated: true, requiresCompany: true)
     }
 
-    func vicenteHistory() async throws -> [VicenteMessage] {
-        let response: VicenteHistoryResponse = try await client.request("GET", path: "personal/vicente/history", authenticated: true, requiresCompany: true)
+    func auraHistory() async throws -> [AuraMessage] {
+        let response: AuraHistoryResponse = try await client.request(
+            "GET",
+            path: "personal/aura/history",
+            authenticated: true,
+            requiresCompany: true
+        )
         return response.messages
     }
 
-    func askVicente(question: String) async throws -> VicenteAskResponse {
+    func askAura(question: String) async throws -> AuraAskResponse {
         try await client.request(
             "POST",
-            path: "personal/vicente/ask",
-            body: VicenteAskRequest(question: question),
+            path: "personal/aura/ask",
+            body: AuraAskRequest(question: question),
             authenticated: true,
             requiresCompany: true
         )
     }
 
-    func clearVicente() async throws {
-        try await client.requestVoid("DELETE", path: "personal/vicente/history", authenticated: true, requiresCompany: true)
+    func clearAura() async throws {
+        try await client.requestVoid(
+            "DELETE",
+            path: "personal/aura/history",
+            authenticated: true,
+            requiresCompany: true
+        )
     }
+
+    func vicenteHistory() async throws -> [AuraMessage] { try await auraHistory() }
+    func askVicente(question: String) async throws -> AuraAskResponse { try await askAura(question: question) }
+    func clearVicente() async throws { try await clearAura() }
 
     func listTasks(date: String) async throws -> [TaskItem] {
         let response: TaskListResponse = try await client.request("GET", path: "tasks?date=\(date)", authenticated: true, requiresCompany: true)
@@ -107,6 +121,6 @@ final class PersonalService {
     }
 }
 
-private struct VicenteAskRequest: Encodable {
+private struct AuraAskRequest: Encodable {
     let question: String
 }

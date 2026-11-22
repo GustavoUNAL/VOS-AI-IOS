@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct VicenteChatView: View {
+struct AuraChatView: View {
     @Environment(SessionStore.self) private var session
     @State private var draft = ""
     @State private var messages: [ChatMessage] = []
@@ -18,7 +18,7 @@ struct VicenteChatView: View {
                         if isSending {
                             HStack(spacing: 8) {
                                 ProgressView()
-                                Text("Vicente está pensando…")
+                                Text("Aura está pensando…")
                                     .font(.footnote)
                                     .foregroundStyle(.secondary)
                             }
@@ -47,7 +47,7 @@ struct VicenteChatView: View {
             }
 
             HStack(alignment: .bottom, spacing: 8) {
-                TextField("Hablá con Vicente…", text: $draft, axis: .vertical)
+                TextField("Hablá con Aura…", text: $draft, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(1...5)
                 Button {
@@ -60,7 +60,7 @@ struct VicenteChatView: View {
             }
             .padding()
         }
-        .navigationTitle("Vicente")
+        .navigationTitle("Aura")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Limpiar") {
@@ -75,7 +75,7 @@ struct VicenteChatView: View {
         HStack {
             if message.role == .user { Spacer(minLength: 40) }
             VStack(alignment: .leading, spacing: 4) {
-                Text(message.role == .assistant ? "Vicente" : "Vos")
+                Text(message.role == .assistant ? "Aura" : "Vos")
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
                 MarkdownText(text: message.text)
@@ -97,7 +97,7 @@ struct VicenteChatView: View {
 
     private func bootstrap() async {
         do {
-            let history = try await session.personal.vicenteHistory()
+            let history = try await session.personal.auraHistory()
             messages = history.map {
                 ChatMessage(
                     role: $0.role == "assistant" ? .assistant : .user,
@@ -123,7 +123,7 @@ struct VicenteChatView: View {
             messages.append(ChatMessage(role: .user, text: text))
         }
         do {
-            let response = try await session.personal.askVicente(question: text)
+            let response = try await session.personal.askAura(question: text)
             messages.append(ChatMessage(role: .assistant, text: response.answer))
         } catch {
             if showUser, messages.last?.role == .user { messages.removeLast() }
@@ -133,7 +133,7 @@ struct VicenteChatView: View {
 
     private func clear() async {
         do {
-            try await session.personal.clearVicente()
+            try await session.personal.clearAura()
             messages = []
             await send(prompt: AppConfig.sessionStartMarker, showUser: false)
         } catch {
@@ -141,3 +141,6 @@ struct VicenteChatView: View {
         }
     }
 }
+
+/// Compat: pantallas viejas que aún referencien Vicente.
+typealias VicenteChatView = AuraChatView

@@ -41,8 +41,8 @@ struct MainTabView: View {
                 }
 
             if isPersonal {
-                NavigationStack { VicenteChatView() }
-                    .tabItem { Label("Vicente", systemImage: "sparkles") }
+                NavigationStack { AuraChatView() }
+                    .tabItem { Label("Aura", systemImage: "sparkles") }
 
                 NavigationStack { JournalView() }
                     .tabItem { Label("Notas", systemImage: "book.pages") }

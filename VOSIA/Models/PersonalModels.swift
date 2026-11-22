@@ -167,21 +167,28 @@ struct PersonalOverview: Codable {
     let graph: WellnessGraph?
 }
 
-struct VicenteMessage: Codable, Identifiable, Hashable {
+struct AuraMessage: Codable, Identifiable, Hashable {
     let id: String
     let role: String
     let content: String
     let createdAt: String
 }
 
-struct VicenteHistoryResponse: Codable {
-    let messages: [VicenteMessage]
-}
-
-struct VicenteAskResponse: Codable {
-    let answer: String
+struct AuraHistoryResponse: Codable {
+    let messages: [AuraMessage]
     let assistantName: String?
 }
+
+struct AuraAskResponse: Codable {
+    let answer: String
+    let assistantName: String?
+    let engine: String?
+}
+
+typealias VicenteMessage = AuraMessage
+typealias VicenteHistoryResponse = AuraHistoryResponse
+typealias VicenteAskResponse = AuraAskResponse
+
 
 struct TaskItem: Codable, Identifiable, Hashable {
     let id: String

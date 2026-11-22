@@ -61,7 +61,7 @@ struct HomeView: View {
 
     private var headerCopy: String {
         if isPersonal {
-            return "Organizate con Vicente: dinero, notas, ideas, tiempo y bienestar en un solo lugar."
+            return "Organizate con Aura: dinero, notas, ideas, tiempo y bienestar en un solo lugar."
         }
         if isService {
             return "Proyectos, tareas, cobros y operación para llevar la empresa con claridad."
@@ -170,8 +170,8 @@ struct ModuleDestinationView: View {
 
     var body: some View {
         switch module {
-        case .vicente:
-            VicenteChatView()
+        case .aura:
+            AuraChatView()
         case .journal:
             JournalView()
         case .ideas:

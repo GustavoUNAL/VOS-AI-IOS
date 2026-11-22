@@ -1,7 +1,7 @@
 import Foundation
 
 enum AppModule: String, CaseIterable, Identifiable, Hashable {
-    case vicente
+    case aura
     case journal
     case ideas
     case financePersonal = "finance-personal"
@@ -28,7 +28,7 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .vicente: return "Vicente"
+        case .aura: return "Aura"
         case .journal: return "Notas"
         case .ideas: return "Ideas"
         case .financePersonal: return "Finanzas"
@@ -55,7 +55,7 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
 
     var subtitle: String {
         switch self {
-        case .vicente: return "Tu asistente personal"
+        case .aura: return "Tu asistente personal"
         case .journal: return "Diario que no se borra"
         case .ideas: return "Vault de ideas"
         case .financePersonal: return "Dinero consciente"
@@ -74,7 +74,7 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
 
     var systemImage: String {
         switch self {
-        case .vicente: return "sparkles"
+        case .aura: return "sparkles"
         case .journal: return "book.pages"
         case .ideas: return "lightbulb.max"
         case .financePersonal: return "banknote"
@@ -101,7 +101,7 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
 
     var isNativeReady: Bool {
         switch self {
-        case .vicente, .journal, .ideas, .financePersonal, .time, .calendarPersonal,
+        case .aura, .journal, .ideas, .financePersonal, .time, .calendarPersonal,
              .wellness, .operations, .account, .tasks, .projects, .analytics:
             return true
         default:
@@ -139,7 +139,7 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
     static func launcher(for user: AuthUser?) -> [AppModule] {
         if isPersonalCompany(user) {
             return [
-                .vicente,
+                .aura,
                 .journal,
                 .ideas,
                 .financePersonal,
