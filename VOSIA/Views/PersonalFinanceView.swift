@@ -20,7 +20,9 @@ struct PersonalFinanceView: View {
     var body: some View {
         List {
             Section {
-                ScreenIntro(text: "Movimientos, categorías y presupuestos. También podés pedirle a Aura que registre un gasto.")
+                ScreenIntro(text: AppModule.isPersonalCompany(session.user)
+                    ? "06 · Dinero: movimientos y presupuestos. Aura también puede registrar un gasto."
+                    : "Movimientos, categorías y presupuestos.")
             }
 
             if let summary = list?.summary {

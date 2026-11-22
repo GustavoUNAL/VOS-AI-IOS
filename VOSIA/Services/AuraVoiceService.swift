@@ -12,12 +12,17 @@ final class AuraVoiceService: NSObject, AVSpeechSynthesizerDelegate {
     private(set) var liveTranscript = ""
     private(set) var permissionDenied = false
     var speakReplies = true
+    /// true = tono de llamada (más grave, natural).
+    var callTone = false
+    var onSpeakFinished: (() -> Void)?
 
     private let synthesizer = AVSpeechSynthesizer()
     private var speechRecognizer: SFSpeechRecognizer?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
+    private var silenceWatch: Task<Void, Never>?
+    private var lastPartialAt = Date()
 
     override init() {
         super.init()
@@ -52,7 +57,7 @@ final class AuraVoiceService: NSObject, AVSpeechSynthesizerDelegate {
         startListening()
     }
 
-    func startListening() {
+    func startListening(autoStopOnSilence: Bool = false) {
         stopSpeaking()
         stopListening()
         guard let speechRecognizer, speechRecognizer.isAvailable else { return }
@@ -79,13 +84,18 @@ final class AuraVoiceService: NSObject, AVSpeechSynthesizerDelegate {
             self?.recognitionRequest?.append(buffer)
         }
 
+        lastPartialAt = Date()
         recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { [weak self] result, error in
             Task { @MainActor in
                 guard let self else { return }
                 if let result {
                     self.liveTranscript = result.bestTranscription.formattedString
+                    self.lastPartialAt = Date()
+                    if result.isFinal {
+                        self.stopListening(keepTranscript: true)
+                    }
                 }
-                if error != nil || result?.isFinal == true {
+                if error != nil {
                     self.stopListening(keepTranscript: true)
                 }
             }
@@ -96,12 +106,31 @@ final class AuraVoiceService: NSObject, AVSpeechSynthesizerDelegate {
             try audioEngine.start()
             isListening = true
             liveTranscript = ""
+            if autoStopOnSilence {
+                watchSilence()
+            }
         } catch {
             stopListening()
         }
     }
 
+    private func watchSilence() {
+        silenceWatch?.cancel()
+        silenceWatch = Task { @MainActor in
+            while !Task.isCancelled && isListening {
+                try? await Task.sleep(nanoseconds: 350_000_000)
+                let spoken = liveTranscript.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !spoken.isEmpty, Date().timeIntervalSince(lastPartialAt) > 1.35 {
+                    stopListening(keepTranscript: true)
+                    break
+                }
+            }
+        }
+    }
+
     func stopListening(keepTranscript: Bool = true) {
+        silenceWatch?.cancel()
+        silenceWatch = nil
         if audioEngine.isRunning {
             audioEngine.stop()
             audioEngine.inputNode.removeTap(onBus: 0)
@@ -123,9 +152,15 @@ final class AuraVoiceService: NSObject, AVSpeechSynthesizerDelegate {
     }
 
     func speak(_ text: String) {
-        guard speakReplies else { return }
+        guard speakReplies else {
+            onSpeakFinished?()
+            return
+        }
         let cleaned = Self.stripMarkdown(text)
-        guard !cleaned.isEmpty else { return }
+        guard !cleaned.isEmpty else {
+            onSpeakFinished?()
+            return
+        }
         stopSpeaking()
         do {
             let session = AVAudioSession.sharedInstance()
@@ -134,12 +169,9 @@ final class AuraVoiceService: NSObject, AVSpeechSynthesizerDelegate {
         } catch {}
 
         let utterance = AVSpeechUtterance(string: cleaned)
-        utterance.voice =
-            AVSpeechSynthesisVoice(language: "es-CO")
-            ?? AVSpeechSynthesisVoice(language: "es-MX")
-            ?? AVSpeechSynthesisVoice(language: "es-ES")
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 1.02
-        utterance.pitchMultiplier = 1.05
+        utterance.voice = Self.preferredVoice(callTone: callTone)
+        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * (callTone ? 1.02 : 1.0)
+        utterance.pitchMultiplier = callTone ? 0.88 : 1.0
         isSpeaking = true
         synthesizer.speak(utterance)
     }
@@ -154,6 +186,7 @@ final class AuraVoiceService: NSObject, AVSpeechSynthesizerDelegate {
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         Task { @MainActor in
             self.isSpeaking = false
+            self.onSpeakFinished?()
         }
     }
 
@@ -161,6 +194,24 @@ final class AuraVoiceService: NSObject, AVSpeechSynthesizerDelegate {
         Task { @MainActor in
             self.isSpeaking = false
         }
+    }
+
+    private static func preferredVoice(callTone: Bool) -> AVSpeechSynthesisVoice? {
+        let voices = AVSpeechSynthesisVoice.speechVoices().filter {
+            $0.language.lowercased().hasPrefix("es")
+        }
+        if callTone {
+            let maleHints = ["jorge", "diego", "carlos", "miguel", "enrique", "pablo", "juan", "raul", "alvaro", "álvaro"]
+            if let male = voices.first(where: { v in
+                maleHints.contains { v.name.lowercased().contains($0) }
+            }) {
+                return male
+            }
+        }
+        return AVSpeechSynthesisVoice(language: "es-CO")
+            ?? AVSpeechSynthesisVoice(language: "es-MX")
+            ?? AVSpeechSynthesisVoice(language: "es-ES")
+            ?? voices.first
     }
 
     private static func stripMarkdown(_ text: String) -> String {

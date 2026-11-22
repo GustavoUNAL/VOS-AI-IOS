@@ -80,6 +80,31 @@ struct AccountView: View {
                     .foregroundStyle(.secondary)
             }
 
+            if AppModule.isPersonalCompany(session.user) {
+                Section("Más en Main") {
+                    NavigationLink {
+                        IdeasVaultView()
+                    } label: {
+                        Label("Ideas", systemImage: "lightbulb.max")
+                    }
+                    NavigationLink {
+                        WellnessGraphView()
+                    } label: {
+                        Label("Bienestar", systemImage: "heart.circle")
+                    }
+                    NavigationLink {
+                        PersonalCalendarView()
+                    } label: {
+                        Label("Agenda", systemImage: "calendar")
+                    }
+                    NavigationLink {
+                        ProjectsView()
+                    } label: {
+                        Label("Proyectos", systemImage: "folder")
+                    }
+                }
+            }
+
             Section("Asistentes") {
                 ScreenIntro(text: AppModule.isPersonalCompany(session.user)
                     ? "Aura guarda la memoria en el servidor (Main). Podés limpiarla desde el chat."

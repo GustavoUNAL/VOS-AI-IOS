@@ -19,7 +19,9 @@ struct ProjectsView: View {
     var body: some View {
         List {
             Section {
-                ScreenIntro(text: "Obras y servicios: historial, estado y cobro. Núcleo operativo de la empresa.")
+                ScreenIntro(text: AppModule.isPersonalCompany(session.user)
+                    ? "05 · Proyectos: obras, seguimiento y cobro."
+                    : "Obras y servicios: historial, estado y cobro. Núcleo operativo de la empresa.")
             }
 
             if let summary {

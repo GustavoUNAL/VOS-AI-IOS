@@ -43,7 +43,7 @@ xcodebuild -project VOSIA.xcodeproj -scheme VOSIA \
 
 ## Contrato con el backend
 
-- `POST /auth/login` → JWT (Keychain); acepta usuario corto (`omar`) o email
+- `POST /auth/login` → JWT (Keychain); acepta usuario corto o email
 - `GET /auth/google?mobile=1` → deep link `vosia://google-auth?access_token=…`
 - `GET /auth/me`
 - `GET /platform/companies` (platform admin)

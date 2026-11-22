@@ -31,9 +31,9 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .aura: return "Aura"
         case .journal: return "Notas"
         case .ideas: return "Ideas"
-        case .financePersonal: return "Finanzas"
-        case .time: return "Tiempo"
-        case .calendarPersonal: return "Calendario"
+        case .financePersonal: return "Dinero"
+        case .time: return "Pendientes"
+        case .calendarPersonal: return "Agenda"
         case .wellness: return "Bienestar"
         case .operations: return "Operación"
         case .products: return "Catálogo"
@@ -45,24 +45,24 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .purchases: return "Compras"
         case .cashClose: return "Cierre del día"
         case .staff: return "Personal"
-        case .tasks: return "Tareas"
+        case .tasks: return "Pendientes"
         case .projects: return "Proyectos"
         case .booking: return "Agenda"
-        case .analytics: return "Finanzas"
+        case .analytics: return "Dinero"
         case .account: return "Cuenta"
         }
     }
 
     var subtitle: String {
         switch self {
-        case .aura: return "Tu asistente personal"
-        case .journal: return "Diario que no se borra"
+        case .aura: return "Tu agente · habla cuando vos quieras"
+        case .journal: return "Escribí y se guarda solo"
         case .ideas: return "Vault de ideas"
-        case .financePersonal: return "Dinero consciente"
-        case .time: return "Pendientes del día"
-        case .calendarPersonal: return "Agenda + iPhone"
+        case .financePersonal: return "Movimientos y presupuestos"
+        case .time: return "Lo de hoy"
+        case .calendarPersonal: return "Citas y eventos"
         case .wellness: return "Ánimo, salud y vínculos"
-        case .projects: return "Obras y servicios"
+        case .projects: return "Obras y seguimiento"
         case .tasks: return "Pendientes del equipo"
         case .operations: return "Pulso del día"
         case .analytics: return "Cobros y números"
@@ -75,10 +75,10 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
     var systemImage: String {
         switch self {
         case .aura: return "sparkles"
-        case .journal: return "book.pages"
+        case .journal: return "note.text"
         case .ideas: return "lightbulb.max"
         case .financePersonal: return "banknote"
-        case .time: return "clock"
+        case .time: return "checklist"
         case .calendarPersonal: return "calendar"
         case .wellness: return "heart.circle"
         case .operations: return "chart.bar"
@@ -136,18 +136,21 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
             || name.contains("electricista")
     }
 
+    /// Secuencia Main alineada a la web: 01 Aura → 06 Dinero.
+    static func personalSequence() -> [AppModule] {
+        [
+            .aura,
+            .journal,
+            .time,
+            .calendarPersonal,
+            .projects,
+            .financePersonal,
+        ]
+    }
+
     static func launcher(for user: AuthUser?) -> [AppModule] {
         if isPersonalCompany(user) {
-            return [
-                .aura,
-                .journal,
-                .ideas,
-                .financePersonal,
-                .time,
-                .calendarPersonal,
-                .wellness,
-                .account,
-            ]
+            return personalSequence()
         }
 
         let permissions = Set(user?.permissions ?? [])

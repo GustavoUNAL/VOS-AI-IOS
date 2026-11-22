@@ -14,7 +14,7 @@ struct PersonalTasksView: View {
         List {
             Section {
                 ScreenIntro(text: isPersonal
-                    ? "Pendientes del día. Aura también puede crearlos con “tarea: …”."
+                    ? "03 · Pendientes del día. Aura también puede crearlos si se lo pedís."
                     : "Pendientes del equipo y de la obra.")
             }
 

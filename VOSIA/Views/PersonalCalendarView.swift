@@ -15,7 +15,9 @@ struct PersonalCalendarView: View {
     var body: some View {
         List {
             Section {
-                ScreenIntro(text: "Agenda personal. Podés exportar cada evento al Calendario del iPhone.")
+                ScreenIntro(text: AppModule.isPersonalCompany(session.user)
+                    ? "04 · Agenda. Podés exportar cada evento al Calendario del iPhone."
+                    : "Agenda personal. Podés exportar cada evento al Calendario del iPhone.")
             }
 
             Section("Nuevo evento") {

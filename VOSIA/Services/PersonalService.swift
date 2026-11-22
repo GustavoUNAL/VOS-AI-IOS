@@ -80,11 +80,11 @@ final class PersonalService {
         return response.messages
     }
 
-    func askAura(question: String) async throws -> AuraAskResponse {
+    func askAura(question: String, mode: String = "chat") async throws -> AuraAskResponse {
         try await client.request(
             "POST",
             path: "personal/aura/ask",
-            body: AuraAskRequest(question: question),
+            body: AuraAskRequest(question: question, mode: mode),
             authenticated: true,
             requiresCompany: true
         )
@@ -123,4 +123,5 @@ final class PersonalService {
 
 private struct AuraAskRequest: Encodable {
     let question: String
+    let mode: String
 }

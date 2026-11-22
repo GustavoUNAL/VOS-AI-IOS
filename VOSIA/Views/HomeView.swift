@@ -13,7 +13,7 @@ struct HomeView: View {
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .center, spacing: 20) {
                     header
                     if isPersonal, let overview {
                         personalPulse(overview)
@@ -21,19 +21,12 @@ struct HomeView: View {
                     if isService, let projectSummary {
                         servicePulse(projectSummary)
                     }
-                    LazyVGrid(
-                        columns: [GridItem(.flexible()), GridItem(.flexible())],
-                        spacing: 12
-                    ) {
-                        ForEach(modules) { module in
-                            Button { path.append(module) } label: {
-                                moduleTile(module)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
+                    modulesSection
                 }
-                .padding()
+                .frame(maxWidth: 560)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
             .background(AppTheme.canvas.ignoresSafeArea())
             .tint(AppTheme.accentMuted)
@@ -53,22 +46,25 @@ struct HomeView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(isPersonal ? "Vida personal" : (isService ? "Empresa de servicios" : AppConfig.brandName))
+        VStack(alignment: .center, spacing: 8) {
+            Text(isPersonal ? "VOS IA · Main" : (isService ? "Empresa de servicios" : AppConfig.brandName))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Text(greeting)
                 .font(.title2.bold())
+                .multilineTextAlignment(.center)
             Text(headerCopy)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 340)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
     }
 
     private var headerCopy: String {
         if isPersonal {
-            return "Organizate con Aura: dinero, notas, ideas, tiempo y bienestar en un solo lugar."
+            return "Tu día en orden: Aura, notas, pendientes y lo demás."
         }
         if isService {
             return "Proyectos, tareas, cobros y operación para llevar la empresa con claridad."
@@ -84,10 +80,53 @@ struct HomeView: View {
         return name.isEmpty ? "Buenas" : "Hola, \(name)"
     }
 
+    @ViewBuilder
+    private var modulesSection: some View {
+        VStack(alignment: .center, spacing: 12) {
+            Text(isPersonal ? "Secuencia del día" : "Módulos")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .tracking(1.2)
+
+            if isPersonal {
+                Text("01 Aura → 02 Notas → 03 Pendientes → 04 Agenda → 05 Proyectos → 06 Dinero")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+            }
+
+            LazyVGrid(
+                columns: isPersonal
+                    ? [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12),
+                    ]
+                    : [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12),
+                    ],
+                spacing: 12
+            ) {
+                ForEach(Array(modules.enumerated()), id: \.element.id) { index, module in
+                    Button { path.append(module) } label: {
+                        moduleTile(module, step: isPersonal ? index + 1 : nil)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .frame(maxWidth: isPersonal ? 420 : .infinity)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
     private func personalPulse(_ overview: PersonalOverview) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Hoy en Main")
                 .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .center)
             HStack {
                 pulseCard("Balance", value: money(overview.money.balanceCOP))
                 pulseCard("Tareas", value: "\(overview.pendingTasksToday)")
@@ -96,12 +135,8 @@ struct HomeView: View {
                 pulseCard("Notas", value: "\(overview.notesCount)")
                 pulseCard("Ideas", value: "\(overview.ideasCount)")
             }
-            if let wellness = overview.latestWellness {
-                Text("Último bienestar · ánimo \(wellness.mood)/10 · salud \(wellness.health)/10")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
         }
+        .frame(maxWidth: 420)
     }
 
     private func servicePulse(_ summary: ServiceProjectsSummary) -> some View {
@@ -131,28 +166,35 @@ struct HomeView: View {
 
     private func money(_ value: Double) -> String { AppTheme.money(value) }
 
-    private func moduleTile(_ module: AppModule) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+    private func moduleTile(_ module: AppModule, step: Int?) -> some View {
+        VStack(spacing: 10) {
+            if let step {
+                Text(String(format: "%02d", step))
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(AppTheme.accentMuted)
+                    .tracking(1)
+            }
             Image(systemName: module.systemImage)
                 .font(.title2)
                 .foregroundStyle(AppTheme.accentMuted)
+                .frame(width: 52, height: 52)
+                .background(AppTheme.accentSoftFill)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             Text(module.title)
-                .font(.headline)
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary)
-            if !module.subtitle.isEmpty {
-                Text(module.subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.leading)
-            }
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.85)
             if !module.isNativeReady {
                 Text("Web")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity, minHeight: 128)
         .background(AppTheme.cardBackground())
     }
 
@@ -183,7 +225,7 @@ struct ModuleDestinationView: View {
             PersonalFinanceView()
         case .time, .tasks:
             PersonalTasksView()
-        case .calendarPersonal:
+        case .calendarPersonal, .booking:
             PersonalCalendarView()
         case .wellness:
             WellnessGraphView()

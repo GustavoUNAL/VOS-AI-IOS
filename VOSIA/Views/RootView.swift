@@ -45,10 +45,13 @@ struct MainTabView: View {
                     .tabItem { Label("Aura", systemImage: "sparkles") }
 
                 NavigationStack { JournalView() }
-                    .tabItem { Label("Notas", systemImage: "book.pages") }
+                    .tabItem { Label("Notas", systemImage: "note.text") }
+
+                NavigationStack { PersonalTasksView() }
+                    .tabItem { Label("Pendientes", systemImage: "checklist") }
 
                 NavigationStack { PersonalFinanceView() }
-                    .tabItem { Label("Finanzas", systemImage: "banknote") }
+                    .tabItem { Label("Dinero", systemImage: "banknote") }
             } else if isService {
                 NavigationStack { ProjectsView() }
                     .tabItem { Label("Proyectos", systemImage: "folder") }
