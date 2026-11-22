@@ -73,8 +73,9 @@ struct AccountView: View {
                 }
             }
 
-            Section("API") {
-                LabeledContent("Base", value: AppConfig.apiBaseURL.absoluteString)
+            Section("Conexión") {
+                LabeledContent("API", value: AppConfig.apiBaseURL.absoluteString)
+                LabeledContent("Web", value: AppConfig.webBaseURL.absoluteString)
                 Text("OpenAI solo se invoca desde el backend. Esta app no contiene API keys.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

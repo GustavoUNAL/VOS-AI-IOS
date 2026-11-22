@@ -451,8 +451,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.vosia.app.native;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				VOS_API_BASE_URL = "http://127.0.0.1:3000";
-				VOS_WEB_BASE_URL = "http://localhost:5173";
+				VOS_API_BASE_URL = "https://vos-ia.com/backend";
+				VOS_WEB_BASE_URL = "https://vos-ia.com";
 			};
 			name = Debug;
 		};

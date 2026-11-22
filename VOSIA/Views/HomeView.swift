@@ -247,12 +247,6 @@ struct ModuleDestinationView: View {
         case .products, .recipes, .inventory, .sales, .pos, .shop,
              .purchases, .cashClose, .staff, .customers, .services, .settings:
             WebModuleView(module: module)
-        default:
-            if module.usesWebShell {
-                WebModuleView(module: module)
-            } else {
-                ComingSoonModuleView(module: module)
-            }
         }
     }
 }

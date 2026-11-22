@@ -6,16 +6,26 @@ struct WebModuleView: View {
     @Environment(SessionStore.self) private var session
     let module: AppModule
 
+    private var resolvedSlug: String {
+        let direct = session.user?.companySlug.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !direct.isEmpty { return direct }
+        let companyId = session.companyId ?? session.user?.companyId ?? ""
+        if let match = session.user?.companies.first(where: { $0.id == companyId }),
+           !match.slug.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return match.slug
+        }
+        return ""
+    }
+
     var body: some View {
         Group {
             if let token = session.accessToken, !token.isEmpty,
-               let slug = session.user?.companySlug.trimmingCharacters(in: .whitespacesAndNewlines),
-               !slug.isEmpty,
+               !resolvedSlug.isEmpty,
                let path = module.webPath {
                 WebModuleRepresentable(
                     token: token,
                     companyId: session.companyId ?? session.user?.companyId ?? "",
-                    companySlug: slug,
+                    companySlug: resolvedSlug,
                     viewPath: path
                 )
             } else {

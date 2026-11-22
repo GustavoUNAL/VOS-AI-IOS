@@ -14,18 +14,23 @@ Cliente **SwiftUI nativo** de VOS IA. No llama a OpenAI. Usa el mismo backend qu
 
 - Xcode 16+
 - iOS 17+
-- API local en `http://127.0.0.1:3000` (Debug) o `https://vos-ia.com/backend` (Release)
-- Front web en `http://localhost:5173` (Debug) o `https://vos-ia.com` (Release) para módulos embebidos
+- Por defecto Debug y Release apuntan a **producción**:
+  - API `https://vos-ia.com/backend`
+  - Web `https://vos-ia.com`
+- Para stack local: en el scheme Debug cambiá `VOS_API_BASE_URL` / `VOS_WEB_BASE_URL` a `http://127.0.0.1:3000` y `http://localhost:5173`.
 
-## Abrir y ejecutar
+## Abrir y ejecutar (simulador)
 
 ```bash
-git clone https://github.com/GustavoUNAL/VOS-AI-IOS.git
-cd VOS-AI-IOS
+cd /ruta/a/VOS-AI-IOS
 open VOSIA.xcodeproj
 ```
 
-Seleccione un simulador iPhone y pulse Run.
+1. Scheme **VOSIA** · destino **iPhone 17** (o cualquier iPhone 17.x).
+2. ▶ Run.
+3. Login con la misma cuenta que en la web.
+
+No hace falta levantar API ni Vite en local.
 
 O regenerar el proyecto Xcode con [XcodeGen](https://github.com/yonaskolb/XcodeGen):
 

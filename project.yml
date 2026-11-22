@@ -27,9 +27,11 @@ targets:
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0"
       configs:
+        # Simulador / Debug: producción (no hace falta API ni Vite locales).
+        # Local: VOS_API_BASE_URL=http://127.0.0.1:3000 y VOS_WEB_BASE_URL=http://localhost:5173
         Debug:
-          VOS_API_BASE_URL: "http://127.0.0.1:3000"
-          VOS_WEB_BASE_URL: "http://localhost:5173"
+          VOS_API_BASE_URL: "https://vos-ia.com/backend"
+          VOS_WEB_BASE_URL: "https://vos-ia.com"
         Release:
           VOS_API_BASE_URL: "https://vos-ia.com/backend"
           VOS_WEB_BASE_URL: "https://vos-ia.com"

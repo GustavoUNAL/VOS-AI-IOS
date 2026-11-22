@@ -14,7 +14,10 @@ struct LoginView: View {
                 Section {
                     Text(AppConfig.brandName)
                         .font(.largeTitle.bold())
-                    ScreenIntro(text: "Misma cuenta que la web. El motor de IA vive en el backend.")
+                    ScreenIntro(text: "Misma cuenta que la web (vos-ia.com). El motor de IA vive en el backend.")
+                    Text(AppConfig.apiBaseURL.host ?? AppConfig.apiBaseURL.absoluteString)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
                 .listRowBackground(Color.clear)
 
