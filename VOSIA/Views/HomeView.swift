@@ -90,6 +90,12 @@ struct ModuleDestinationView: View {
             JournalView()
         case .operations:
             OperationsView()
+        case .financePersonal:
+            PersonalFinanceView()
+        case .time, .tasks:
+            PersonalTasksView()
+        case .calendarPersonal:
+            PersonalCalendarView()
         case .account:
             AccountView()
         default:

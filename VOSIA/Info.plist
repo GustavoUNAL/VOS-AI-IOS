@@ -31,6 +31,10 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>VOS IA exporta tus eventos personales al Calendario del iPhone cuando lo pedís.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>VOS IA exporta tus eventos personales al Calendario del iPhone cuando lo pedís.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

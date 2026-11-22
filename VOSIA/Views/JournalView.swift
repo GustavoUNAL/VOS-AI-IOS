@@ -23,7 +23,7 @@ struct JournalView: View {
         @Bindable var model = model
         List {
             Section {
-                Text("Diario de la empresa activa. Se guarda en el backend (`/journal`), no en el chat.")
+                Text("Notas del diario en la base de datos (Neon). Un deploy no las borra: solo se pierden si se elimina la empresa o la nota a mano.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

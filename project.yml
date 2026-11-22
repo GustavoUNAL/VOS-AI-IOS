@@ -43,6 +43,8 @@ targets:
           - CFBundleURLName: com.vosia.app.native
             CFBundleURLSchemes:
               - vosia
+        NSCalendarsUsageDescription: VOS IA exporta tus eventos personales al Calendario del iPhone cuando lo pedís.
+        NSCalendarsFullAccessUsageDescription: VOS IA exporta tus eventos personales al Calendario del iPhone cuando lo pedís.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
 schemes:

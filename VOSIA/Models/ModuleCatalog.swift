@@ -4,6 +4,9 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
     case assistant
     case journal
     case operations
+    case financePersonal = "finance-personal"
+    case time
+    case calendarPersonal = "calendar-personal"
     case products
     case recipes
     case inventory
@@ -26,6 +29,9 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .assistant: return "Asistente"
         case .journal: return "Diario"
         case .operations: return "Operación"
+        case .financePersonal: return "Finanzas"
+        case .time: return "Tiempo"
+        case .calendarPersonal: return "Calendario"
         case .products: return "Catálogo"
         case .recipes: return "Recetas"
         case .inventory: return "Stock"
@@ -38,7 +44,7 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .tasks: return "Tareas"
         case .projects: return "Proyectos"
         case .booking: return "Agenda"
-        case .analytics: return "Finanzas"
+        case .analytics: return "Finanzas negocio"
         case .account: return "Cuenta"
         }
     }
@@ -48,6 +54,9 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .assistant: return "bubble.left.and.bubble.right"
         case .journal: return "book"
         case .operations: return "chart.bar"
+        case .financePersonal: return "banknote"
+        case .time: return "clock"
+        case .calendarPersonal: return "calendar"
         case .products: return "square.grid.2x2"
         case .recipes: return "list.bullet.clipboard"
         case .inventory: return "shippingbox"
@@ -59,7 +68,7 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .staff: return "person.2"
         case .tasks: return "checklist"
         case .projects: return "folder"
-        case .booking: return "calendar"
+        case .booking: return "calendar.badge.clock"
         case .analytics: return "chart.xyaxis.line"
         case .account: return "person.crop.circle"
         }
@@ -67,7 +76,8 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
 
     var isNativeReady: Bool {
         switch self {
-        case .assistant, .journal, .operations, .account:
+        case .assistant, .journal, .operations, .account,
+             .financePersonal, .time, .calendarPersonal:
             return true
         default:
             return false
@@ -78,6 +88,25 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         let permissions = Set(user?.permissions ?? [])
         let isAdmin = user?.isPlatformAdmin == true
             || permissions.contains("platform.admin")
+        let businessType = user?.companies
+            .first(where: { $0.id == user?.companyId })?
+            .businessType?
+            .lowercased()
+        let isPersonal = businessType == "personal"
+            || user?.companyId == "seed-main"
+            || (user?.companySlug.lowercased() == "main")
+            || (user?.companyName.lowercased() == "main")
+
+        if isPersonal {
+            return [
+                .assistant,
+                .journal,
+                .financePersonal,
+                .time,
+                .calendarPersonal,
+                .account,
+            ]
+        }
 
         func can(_ needles: String...) -> Bool {
             if isAdmin { return true }

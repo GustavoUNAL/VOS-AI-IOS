@@ -20,6 +20,7 @@ final class SessionStore: TokenProviding {
     let journal: JournalService
     let operations: OperationsService
     let platform: PlatformService
+    let personal: PersonalService
 
     /// Historial del asistente en memoria de dispositivo (no en servidor).
     var assistantMessages: [ChatMessage] = []
@@ -33,6 +34,7 @@ final class SessionStore: TokenProviding {
         self.journal = JournalService(client: client)
         self.operations = OperationsService(client: client)
         self.platform = PlatformService(client: client)
+        self.personal = PersonalService(client: client)
         client.tokens = self
     }
 
