@@ -53,5 +53,7 @@
 	<dict/>
 	<key>VOS_API_BASE_URL</key>
 	<string>$(VOS_API_BASE_URL)</string>
+	<key>VOS_WEB_BASE_URL</key>
+	<string>$(VOS_WEB_BASE_URL)</string>
 </dict>
 </plist>

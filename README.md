@@ -15,6 +15,7 @@ Cliente **SwiftUI nativo** de VOS IA. No llama a OpenAI. Usa el mismo backend qu
 - Xcode 16+
 - iOS 17+
 - API local en `http://127.0.0.1:3000` (Debug) o `https://vos-ia.com/backend` (Release)
+- Front web en `http://localhost:5173` (Debug) o `https://vos-ia.com` (Release) para módulos embebidos
 
 ## Abrir y ejecutar
 
@@ -33,13 +34,16 @@ xcodegen generate
 open VOSIA.xcodeproj
 ```
 
-Build por terminal:
+## Paridad con la web
 
-```bash
-xcodebuild -project VOSIA.xcodeproj -scheme VOSIA \
-  -destination 'platform=iOS Simulator,name=iPhone 17' \
-  CODE_SIGNING_ALLOWED=NO build
-```
+| Área | iOS |
+|------|-----|
+| Main (Aura, Notas, Pendientes, Agenda, Proyectos, Dinero) | Nativo |
+| Ideas / Bienestar | Nativo (Cuenta → Más en Main) |
+| Operación, Asistente empresa, Finanzas, Proyectos, Tareas | Nativo |
+| Catálogo, Recetas, Stock, Ventas, POS, Tienda, Compras, Personal, Cierre, Agenda de citas, Clientes, Servicios, Enlace público | **Web embebida** (misma UI que vos-ia.com, sesión JWT inyectada) |
+
+Los módulos “Completo” del launcher abren `WebModuleView` con handoff `#/native-handoff?access_token=…&next=e/{slug}/{view}`.
 
 ## Contrato con el backend
 
@@ -47,23 +51,13 @@ xcodebuild -project VOSIA.xcodeproj -scheme VOSIA \
 - `GET /auth/google?mobile=1` → deep link `vosia://google-auth?access_token=…`
 - `GET /auth/me`
 - `GET /platform/companies` (platform admin)
-- `POST /auth/platform/enter-company` (sin `reason`)
+- `POST /auth/platform/enter-company`
 - `POST /auth/platform/home`
-- `POST /assistant/ask` con `{ question, history? }` → `{ answer }`
+- `POST /assistant/ask`, `POST /personal/aura/ask` (`mode`: `chat` \| `call`)
 - `GET/POST/PATCH/DELETE /journal`
 - `GET /operations/day`
-- Header `Authorization: Bearer …`
-- Header `X-Company-Id` cuando hay empresa activa
-
-El historial del chat vive en la app (igual que la web). No hay segundo motor de IA.
-
-## Flujo actual
-
-1. Login (password o Google).
-2. Platform admin → lista de empresas (`/platform/companies`).
-3. Al entrar a una empresa → Inicio (launcher) + Asistente + Diario + Operación + Cuenta.
-4. Módulos aún no nativos aparecen como “Próximamente” (mismos endpoints que la web).
+- Header `Authorization: Bearer …` y `X-Company-Id`
 
 ## Nota
 
-`vos-front/ios` es el shell Capacitor (web embebida). Este repo es la app nativa.
+`vos-front/ios` es el shell Capacitor (web embebida). Este repo es la app nativa con módulos SwiftUI + WebView para el resto.

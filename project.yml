@@ -29,8 +29,10 @@ targets:
       configs:
         Debug:
           VOS_API_BASE_URL: "http://127.0.0.1:3000"
+          VOS_WEB_BASE_URL: "http://localhost:5173"
         Release:
           VOS_API_BASE_URL: "https://vos-ia.com/backend"
+          VOS_WEB_BASE_URL: "https://vos-ia.com"
     info:
       path: VOSIA/Info.plist
       properties:
@@ -39,6 +41,7 @@ targets:
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         VOS_API_BASE_URL: $(VOS_API_BASE_URL)
+        VOS_WEB_BASE_URL: $(VOS_WEB_BASE_URL)
         CFBundleURLTypes:
           - CFBundleURLName: com.vosia.app.native
             CFBundleURLSchemes:

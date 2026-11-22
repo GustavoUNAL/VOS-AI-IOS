@@ -52,6 +52,18 @@ struct MainTabView: View {
 
                 NavigationStack { PersonalFinanceView() }
                     .tabItem { Label("Dinero", systemImage: "banknote") }
+            } else if AppModule.isBookingLedCompany(session.user) {
+                NavigationStack { WebModuleView(module: .booking) }
+                    .tabItem { Label("Agenda", systemImage: "calendar.badge.clock") }
+
+                NavigationStack { WebModuleView(module: .customers) }
+                    .tabItem { Label("Clientes", systemImage: "person.crop.rectangle.stack") }
+
+                NavigationStack { WebModuleView(module: .cashClose) }
+                    .tabItem { Label("Cierre", systemImage: "moon.stars") }
+
+                NavigationStack { BusinessFinanceView() }
+                    .tabItem { Label("Finanzas", systemImage: "chart.xyaxis.line") }
             } else if isService {
                 NavigationStack { ProjectsView() }
                     .tabItem { Label("Proyectos", systemImage: "folder") }
@@ -70,6 +82,12 @@ struct MainTabView: View {
 
                 NavigationStack { OperationsView() }
                     .tabItem { Label("Operación", systemImage: "chart.bar") }
+
+                NavigationStack { WebModuleView(module: .pos) }
+                    .tabItem { Label("POS", systemImage: "storefront") }
+
+                NavigationStack { WebModuleView(module: .sales) }
+                    .tabItem { Label("Ventas", systemImage: "cart") }
             }
 
             NavigationStack {

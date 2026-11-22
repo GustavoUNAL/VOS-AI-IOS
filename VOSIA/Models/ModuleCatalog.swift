@@ -21,6 +21,9 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
     case tasks
     case projects
     case booking
+    case customers
+    case services
+    case settings
     case analytics
     case account
 
@@ -48,7 +51,10 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .tasks: return "Pendientes"
         case .projects: return "Proyectos"
         case .booking: return "Agenda"
-        case .analytics: return "Dinero"
+        case .customers: return "Clientes"
+        case .services: return "Servicios"
+        case .settings: return "Enlace público"
+        case .analytics: return "Finanzas"
         case .account: return "Cuenta"
         }
     }
@@ -67,7 +73,18 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .operations: return "Pulso del día"
         case .analytics: return "Cobros y números"
         case .booking: return "Citas y visitas"
+        case .customers: return "Base de clientes"
+        case .services: return "Servicios que ofrecés"
+        case .settings: return "Link de reservas"
         case .staff: return "Equipo"
+        case .products: return "Productos del catálogo"
+        case .recipes: return "Fichas de receta"
+        case .inventory: return "Existencias"
+        case .sales: return "Historial de ventas"
+        case .pos: return "Caja y mesas"
+        case .shop: return "Pedidos online"
+        case .purchases: return "Compras y lotes"
+        case .cashClose: return "Cierre diario"
         default: return ""
         }
     }
@@ -94,11 +111,15 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         case .tasks: return "checklist"
         case .projects: return "folder"
         case .booking: return "calendar.badge.clock"
+        case .customers: return "person.crop.rectangle.stack"
+        case .services: return "wrench.and.screwdriver"
+        case .settings: return "link"
         case .analytics: return "chart.xyaxis.line"
         case .account: return "person.crop.circle"
         }
     }
 
+    /// Vista nativa SwiftUI (sin WebView).
     var isNativeReady: Bool {
         switch self {
         case .aura, .journal, .ideas, .financePersonal, .time, .calendarPersonal,
@@ -106,6 +127,36 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
             return true
         default:
             return false
+        }
+    }
+
+    /// Abre el módulo web completo (misma UI que vos-ia.com) con sesión inyectada.
+    var usesWebShell: Bool {
+        webPath != nil && !isNativeReady
+    }
+
+    /// Segmento de ruta web: `#/e/{slug}/{webPath}`.
+    var webPath: String? {
+        switch self {
+        case .products: return "products"
+        case .recipes: return "recipes"
+        case .inventory: return "inventory"
+        case .sales: return "sales"
+        case .pos: return "pos"
+        case .shop: return "shop"
+        case .purchases: return "purchases"
+        case .cashClose: return "cash-close"
+        case .staff: return "staff"
+        case .booking: return "booking"
+        case .customers: return "customers"
+        case .services: return "services"
+        case .settings: return "settings"
+        case .tasks: return "tasks"
+        case .projects: return "projects"
+        case .analytics: return "analytics"
+        case .journal: return "notes"
+        case .aura: return "aura"
+        default: return nil
         }
     }
 
@@ -124,7 +175,6 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
             || (user?.companyName.lowercased() == "main")
     }
 
-    /// El electricista y negocios de servicios/energía.
     static func isServiceCompany(_ user: AuthUser?) -> Bool {
         let businessType = activeBusinessType(user)
         let slug = user?.companySlug.lowercased() ?? ""
@@ -136,7 +186,16 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
             || name.contains("electricista")
     }
 
-    /// Secuencia Main alineada a la web: 01 Aura → 06 Dinero.
+    /// Negocios de citas (peluquería, spa, etc.) — misma lógica que la web.
+    static func isBookingLedCompany(_ user: AuthUser?) -> Bool {
+        let modules = user?.companies.first(where: { $0.id == user?.companyId })?.modules ?? []
+        guard modules.contains("booking") else { return false }
+        let blockers: Set<String> = [
+            "products", "inventory", "purchases", "tasks", "projects", "staff", "dental",
+        ]
+        return !modules.contains(where: { blockers.contains($0) })
+    }
+
     static func personalSequence() -> [AppModule] {
         [
             .aura,
@@ -168,6 +227,15 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
             companyModules.isEmpty || companyModules.contains(slug) || isAdmin
         }
 
+        if isBookingLedCompany(user) {
+            var apps: [AppModule] = [.booking, .settings, .customers, .services, .cashClose]
+            if hasModule("finance"), can("finance.", "finance.view") {
+                apps.append(.analytics)
+            }
+            apps.append(.account)
+            return apps
+        }
+
         if isServiceCompany(user) {
             var apps: [AppModule] = []
             if hasModule("projects"), can("projects.", "projects.view") { apps.append(.projects) }
@@ -188,7 +256,7 @@ enum AppModule: String, CaseIterable, Identifiable, Hashable {
         if can("staff.", "staff.view") { apps.append(.staff) }
         if can("tasks.", "tasks.view") { apps.append(.tasks) }
         if can("projects.", "projects.view") { apps.append(.projects) }
-        if can("booking.", "booking.view") { apps.append(.booking) }
+        if hasModule("booking"), can("booking.", "booking.view") { apps.append(.booking) }
         if can("finance.", "finance.view") { apps.append(.analytics) }
         apps.append(.account)
         return apps

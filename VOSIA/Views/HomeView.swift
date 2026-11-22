@@ -186,8 +186,8 @@ struct HomeView: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.85)
-            if !module.isNativeReady {
-                Text("Web")
+            if module.usesWebShell {
+                Text("Completo")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -209,7 +209,10 @@ struct HomeView: View {
 }
 
 struct ModuleDestinationView: View {
+    @Environment(SessionStore.self) private var session
     let module: AppModule
+
+    private var isPersonal: Bool { AppModule.isPersonalCompany(session.user) }
 
     var body: some View {
         switch module {
@@ -225,8 +228,14 @@ struct ModuleDestinationView: View {
             PersonalFinanceView()
         case .time, .tasks:
             PersonalTasksView()
-        case .calendarPersonal, .booking:
+        case .calendarPersonal:
             PersonalCalendarView()
+        case .booking:
+            if isPersonal {
+                PersonalCalendarView()
+            } else {
+                WebModuleView(module: .booking)
+            }
         case .wellness:
             WellnessGraphView()
         case .projects:
@@ -235,8 +244,15 @@ struct ModuleDestinationView: View {
             BusinessFinanceView()
         case .account:
             AccountView()
+        case .products, .recipes, .inventory, .sales, .pos, .shop,
+             .purchases, .cashClose, .staff, .customers, .services, .settings:
+            WebModuleView(module: module)
         default:
-            ComingSoonModuleView(module: module)
+            if module.usesWebShell {
+                WebModuleView(module: module)
+            } else {
+                ComingSoonModuleView(module: module)
+            }
         }
     }
 }
@@ -248,7 +264,7 @@ struct ComingSoonModuleView: View {
         ContentUnavailableView {
             Label(module.title, systemImage: module.systemImage)
         } description: {
-            Text("Disponible en la web. La versión nativa se construye sobre los mismos endpoints.")
+            Text("Este módulo aún no está disponible en iOS.")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppTheme.canvas.ignoresSafeArea())
